@@ -1,0 +1,148 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Roadworks;
+
+use App\Models\Roadwork;
+use Meilisearch\Endpoints\Indexes;
+
+/**
+ * Geo + faceted search over the Meilisearch roadworks index.
+ *
+ * Scout's fluent builder has no geo support, so every method drops to a raw
+ * Meilisearch options closure (filter / sort / facets) and returns the raw
+ * response via `->raw()` — `->get()` would hydrate models but discard
+ * `facetDistribution` and the per-hit `_geoDistance`.
+ */
+final class RoadworkSearch
+{
+    /**
+     * The small per-hit fields needed to render a marker. Requested explicitly
+     * (via `attributesToRetrieve`) so the much larger `geometry` field is only
+     * shipped when the caller asks for it.
+     *
+     * @var list<string>
+     */
+    private const POINT_ATTRIBUTES = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', '_geo'];
+
+    /**
+     * Roadworks whose representative point is within `$meters` of a lat/lng,
+     * nearest first, with facet counts for the given attributes.
+     *
+     * @param  list<string>  $facets  filterable attributes to return counts for, e.g. ['status', 'kind']
+     * @param  array<string, string|int|bool|list<string|int>>  $filters  extra scalar facet filters, e.g. ['status' => 'active']
+     * @return array<string, mixed>  raw Meilisearch response (`hits`, `facetDistribution`, `estimatedTotalHits`, ...)
+     */
+    public function nearby(string $query, float $latitude, float $longitude, int $meters, array $facets = [], array $filters = [], int $limit = 20): array
+    {
+        $filter = array_merge(
+            ["_geoRadius({$latitude}, {$longitude}, {$meters})"],
+            $this->scalarFilters($filters),
+        );
+
+        return Roadwork::search($query, function (Indexes $index, string $query, array $options) use ($latitude, $longitude, $filter, $facets, $limit) {
+            $options['filter'] = $filter;
+            // Sorting by `_geoPoint` also makes Meilisearch attach `_geoDistance` (metres) to each hit.
+            $options['sort'] = ["_geoPoint({$latitude}, {$longitude}):asc"];
+            $options['facets'] = $facets;
+            $options['limit'] = $limit;
+
+            return $index->search($query, $options);
+        })->raw();
+    }
+
+    /**
+     * Roadworks inside a bounding box, with facets. Ideal for "what's in the
+     * current map viewport". Meilisearch's `_geoBoundingBox` expects the
+     * top-right and bottom-left corners, so the box is assembled from the
+     * north/east and south/west extremes.
+     *
+     * Set `$includeGeometry` (only worth doing when zoomed in) to also return
+     * each hit's stored `geometry` field — the situation/restriction/detour
+     * GeoJSON — so the map can draw lines without a database round-trip.
+     *
+     * @param  list<string>  $facets
+     * @param  array<string, string|int|bool|list<string|int>>  $filters
+     * @return array<string, mixed>
+     */
+    public function withinBoundingBox(string $query, float $topLat, float $leftLng, float $bottomLat, float $rightLng, array $facets = [], array $filters = [], int $limit = 100, bool $includeGeometry = false): array
+    {
+        $filter = array_merge(
+            ["_geoBoundingBox([{$topLat}, {$rightLng}], [{$bottomLat}, {$leftLng}])"],
+            $this->scalarFilters($filters),
+        );
+
+        $attributes = $includeGeometry
+            ? [...self::POINT_ATTRIBUTES, 'geometry']
+            : self::POINT_ATTRIBUTES;
+
+        return Roadwork::search($query, function (Indexes $index, string $query, array $options) use ($filter, $facets, $limit, $attributes) {
+            $options['filter'] = $filter;
+            $options['facets'] = $facets;
+            $options['limit'] = $limit;
+            $options['attributesToRetrieve'] = $attributes;
+
+            return $index->search($query, $options);
+        })->raw();
+    }
+
+    /**
+     * Free-text / faceted search with no geo constraint. Used to locate a
+     * roadwork by name or postcode-ish term so the map can fly to it.
+     *
+     * @param  list<string>  $facets
+     * @param  array<string, string|int|bool|list<string|int>>  $filters
+     * @return array<string, mixed>
+     */
+    public function text(string $query, array $facets = [], array $filters = [], int $limit = 50): array
+    {
+        $filter = $this->scalarFilters($filters);
+
+        return Roadwork::search($query, function (Indexes $index, string $query, array $options) use ($filter, $facets, $limit) {
+            if ($filter !== []) {
+                $options['filter'] = $filter;
+            }
+            $options['facets'] = $facets;
+            $options['limit'] = $limit;
+
+            return $index->search($query, $options);
+        })->raw();
+    }
+
+    /**
+     * Turn `['status' => 'active', 'kind' => ['repair', 'event']]` into
+     * Meilisearch filter expressions (`status = "active"`, `kind IN ["repair","event"]`).
+     *
+     * @param  array<string, string|int|bool|list<string|int>>  $filters
+     * @return list<string>
+     */
+    private function scalarFilters(array $filters): array
+    {
+        $expressions = [];
+
+        foreach ($filters as $attribute => $value) {
+            if (is_array($value)) {
+                $quoted = implode(', ', array_map($this->quote(...), $value));
+                $expressions[] = "{$attribute} IN [{$quoted}]";
+            } else {
+                $expressions[] = "{$attribute} = {$this->quote($value)}";
+            }
+        }
+
+        return $expressions;
+    }
+
+    private function quote(string|int|bool $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (is_int($value)) {
+            return (string) $value;
+        }
+
+        return '"'.str_replace('"', '\"', $value).'"';
+    }
+}

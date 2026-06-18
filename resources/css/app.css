@@ -1,0 +1,161 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    /* Colors (Material 3 — VoorMijnDeur navy/gold) */
+    --color-primary: #000d2f;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #00205b;
+    --color-on-primary-container: #738aca;
+    --color-primary-fixed: #dae2ff;
+    --color-primary-fixed-dim: #b2c5ff;
+    --color-on-primary-fixed: #001849;
+    --color-on-primary-fixed-variant: #2d447f;
+    --color-inverse-primary: #b2c5ff;
+    --color-surface-tint: #455c99;
+
+    --color-secondary: #775a00;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #ffc72c;
+    --color-on-secondary-container: #6f5400;
+    --color-secondary-fixed: #ffdf99;
+    --color-secondary-fixed-dim: #f6bf22;
+    --color-on-secondary-fixed: #251a00;
+    --color-on-secondary-fixed-variant: #5a4300;
+
+    --color-tertiary: #051020;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #1a2536;
+    --color-on-tertiary-container: #818ca1;
+    --color-tertiary-fixed: #d8e3fa;
+    --color-tertiary-fixed-dim: #bcc7dd;
+    --color-on-tertiary-fixed: #111c2c;
+    --color-on-tertiary-fixed-variant: #3c475a;
+
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    --color-background: #faf8fe;
+    --color-on-background: #1a1b20;
+    --color-surface: #faf8fe;
+    --color-on-surface: #1a1b20;
+    --color-surface-variant: #e3e2e7;
+    --color-on-surface-variant: #444650;
+    --color-surface-bright: #faf8fe;
+    --color-surface-dim: #dbd9df;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f4f3f9;
+    --color-surface-container: #efedf3;
+    --color-surface-container-high: #e9e7ed;
+    --color-surface-container-highest: #e3e2e7;
+    --color-inverse-surface: #2f3035;
+    --color-inverse-on-surface: #f2f0f6;
+
+    --color-outline: #757681;
+    --color-outline-variant: #c5c6d1;
+
+    /* Named spacing */
+    --spacing-xs: 4px;
+    --spacing-base: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 24px;
+    --spacing-gutter: 24px;
+    --spacing-lg: 40px;
+    --spacing-xl: 64px;
+    --spacing-margin-mobile: 16px;
+    --spacing-margin-desktop: 48px;
+
+    /* Stack spacing (new layout) */
+    --spacing-stack-xs: 4px;
+    --spacing-stack-sm: 8px;
+    --spacing-stack-md: 16px;
+    --spacing-stack-lg: 24px;
+    --spacing-stack-xl: 40px;
+    --spacing-stack-xxl: 64px;
+
+    /* Fonts — all Plus Jakarta Sans (loaded via Bunny) */
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-lg-mobile: 'Plus Jakarta Sans', sans-serif;
+    --font-headline-md: 'Plus Jakarta Sans', sans-serif;
+    --font-body-lg: 'Plus Jakarta Sans', sans-serif;
+    --font-body-md: 'Plus Jakarta Sans', sans-serif;
+    --font-label-md: 'Plus Jakarta Sans', sans-serif;
+    --font-caption: 'Plus Jakarta Sans', sans-serif;
+
+    /* Type scale */
+    --text-display: 48px;
+    --text-display--line-height: 56px;
+    --text-display--letter-spacing: -0.02em;
+    --text-display--font-weight: 700;
+
+    --text-headline-lg: 32px;
+    --text-headline-lg--line-height: 40px;
+    --text-headline-lg--letter-spacing: -0.01em;
+    --text-headline-lg--font-weight: 700;
+
+    --text-headline-lg-mobile: 28px;
+    --text-headline-lg-mobile--line-height: 36px;
+    --text-headline-lg-mobile--letter-spacing: -0.01em;
+    --text-headline-lg-mobile--font-weight: 700;
+
+    --text-headline-md: 24px;
+    --text-headline-md--line-height: 32px;
+    --text-headline-md--letter-spacing: -0.01em;
+    --text-headline-md--font-weight: 600;
+
+    --text-body-lg: 18px;
+    --text-body-lg--line-height: 28px;
+    --text-body-lg--letter-spacing: 0em;
+    --text-body-lg--font-weight: 400;
+
+    --text-body-md: 16px;
+    --text-body-md--line-height: 24px;
+    --text-body-md--letter-spacing: 0em;
+    --text-body-md--font-weight: 400;
+
+    --text-label-md: 14px;
+    --text-label-md--line-height: 20px;
+    --text-label-md--letter-spacing: 0.02em;
+    --text-label-md--font-weight: 600;
+
+    --text-caption: 12px;
+    --text-caption--line-height: 16px;
+    --text-caption--letter-spacing: 0em;
+    --text-caption--font-weight: 500;
+}
+
+body {
+    font-family: var(--font-sans);
+}
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+    vertical-align: middle;
+}
+
+.hero-overlay {
+    background-image: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0, 13, 47, 0.8)
+    );
+}

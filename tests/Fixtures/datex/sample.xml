@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mc:messageContainer xmlns:mc="http://datex2.eu/schema/3/messageContainer"
+                     xmlns:sit="http://datex2.eu/schema/3/situation"
+                     xmlns:com="http://datex2.eu/schema/3/common"
+                     xmlns:loc="http://datex2.eu/schema/3/locationReferencing"
+                     xmlns:nle="http://datex2.eu/schema/3/nlExtensions"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <mc:payload xsi:type="sit:SituationPublication">
+    <sit:situation id="NDW03_100">
+      <sit:overallSeverity>medium</sit:overallSeverity>
+      <sit:headerInformation><com:informationStatus>real</com:informationStatus></sit:headerInformation>
+      <sit:situationRecord xsi:type="sit:MaintenanceWorks" id="r1">
+        <sit:source><com:sourceName><com:values><com:value lang="nl">RWS Zuid</com:value></com:values></com:sourceName></sit:source>
+        <sit:validity><com:validityTimeSpecification>
+          <com:overallStartTime>2026-07-20T03:00:00Z</com:overallStartTime>
+          <com:overallEndTime>2026-07-22T03:00:00Z</com:overallEndTime>
+        </com:validityTimeSpecification></sit:validity>
+        <sit:cause><sit:causeType>roadMaintenance</sit:causeType></sit:cause>
+        <sit:locationReference xsi:type="loc:PointLocation"><loc:pointByCoordinates><loc:pointCoordinates>
+          <loc:latitude>51.39906</loc:latitude><loc:longitude>6.127533</loc:longitude>
+        </loc:pointCoordinates></loc:pointByCoordinates></sit:locationReference>
+        <nle:roadworkStatus>running</nle:roadworkStatus>
+        <nle:roadworkHindranceClass>hindranceClass1</nle:roadworkHindranceClass>
+        <com:informationStatus>real</com:informationStatus>
+      </sit:situationRecord>
+      <sit:situationRecord xsi:type="sit:ReroutingManagement" id="r2">
+        <sit:alternativeRoute><loc:locationContainedInItinerary><loc:location xsi:type="loc:LinearLocation">
+          <loc:gmlLineString srsName="WGS 84"><loc:posList>51.399 6.127 51.398 6.128 51.397 6.129</loc:posList></loc:gmlLineString>
+        </loc:location></loc:locationContainedInItinerary></sit:alternativeRoute>
+        <com:informationStatus>real</com:informationStatus>
+      </sit:situationRecord>
+    </sit:situation>
+    <sit:situation id="NDW03_200">
+      <sit:overallSeverity>low</sit:overallSeverity>
+      <sit:headerInformation><com:informationStatus>real</com:informationStatus></sit:headerInformation>
+      <sit:situationRecord xsi:type="sit:PublicEvent" id="r1">
+        <sit:cause><sit:causeType>publicEvent</sit:causeType></sit:cause>
+        <sit:locationReference xsi:type="loc:PointLocation"><loc:pointByCoordinates><loc:pointCoordinates>
+          <loc:latitude>52.0</loc:latitude><loc:longitude>5.0</loc:longitude>
+        </loc:pointCoordinates></loc:pointByCoordinates></sit:locationReference>
+        <com:urlLinkAddress>https://example.test/attachment/abc</com:urlLinkAddress>
+        <com:informationStatus>real</com:informationStatus>
+      </sit:situationRecord>
+    </sit:situation>
+    <sit:situation id="NDW03_300">
+      <sit:headerInformation><com:informationStatus>test</com:informationStatus></sit:headerInformation>
+      <sit:situationRecord xsi:type="sit:MaintenanceWorks" id="r1"/>
+    </sit:situation>
+  </mc:payload>
+</mc:messageContainer>
