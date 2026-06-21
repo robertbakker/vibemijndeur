@@ -54,7 +54,7 @@ function severityColor(severity: string | null): string {
     <Head title="Interactieve Kaart | VoorMijnDeur" />
 
     <div class="bg-background text-on-surface flex h-screen flex-col overflow-hidden">
-        <AppHeader />
+        <AppHeader full-width />
 
         <main class="relative flex flex-1 overflow-hidden">
             <!-- Filters sidebar -->

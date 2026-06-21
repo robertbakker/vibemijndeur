@@ -4,59 +4,59 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    /* Colors (Material 3 — VoorMijnDeur navy/gold) */
-    --color-primary: #000d2f;
+    /* Colors (Material 3 — VoorMijnDeur NS/ANWB blue/yellow) */
+    --color-primary: #003082;
     --color-on-primary: #ffffff;
-    --color-primary-container: #00205b;
-    --color-on-primary-container: #738aca;
+    --color-primary-container: #00256a;
+    --color-on-primary-container: #aec3ff;
     --color-primary-fixed: #dae2ff;
-    --color-primary-fixed-dim: #b2c5ff;
-    --color-on-primary-fixed: #001849;
-    --color-on-primary-fixed-variant: #2d447f;
-    --color-inverse-primary: #b2c5ff;
-    --color-surface-tint: #455c99;
+    --color-primary-fixed-dim: #aec3ff;
+    --color-on-primary-fixed: #001847;
+    --color-on-primary-fixed-variant: #1a4699;
+    --color-inverse-primary: #aec3ff;
+    --color-surface-tint: #003082;
 
-    --color-secondary: #775a00;
+    --color-secondary: #806100;
     --color-on-secondary: #ffffff;
-    --color-secondary-container: #ffc72c;
-    --color-on-secondary-container: #6f5400;
-    --color-secondary-fixed: #ffdf99;
-    --color-secondary-fixed-dim: #f6bf22;
-    --color-on-secondary-fixed: #251a00;
-    --color-on-secondary-fixed-variant: #5a4300;
+    --color-secondary-container: #ffc917;
+    --color-on-secondary-container: #5c4500;
+    --color-secondary-fixed: #ffe08a;
+    --color-secondary-fixed-dim: #ffc917;
+    --color-on-secondary-fixed: #281c00;
+    --color-on-secondary-fixed-variant: #614700;
 
-    --color-tertiary: #051020;
+    --color-tertiary: #006397;
     --color-on-tertiary: #ffffff;
-    --color-tertiary-container: #1a2536;
-    --color-on-tertiary-container: #818ca1;
-    --color-tertiary-fixed: #d8e3fa;
-    --color-tertiary-fixed-dim: #bcc7dd;
-    --color-on-tertiary-fixed: #111c2c;
-    --color-on-tertiary-fixed-variant: #3c475a;
+    --color-tertiary-container: #00a1e4;
+    --color-on-tertiary-container: #003e5c;
+    --color-tertiary-fixed: #cae6ff;
+    --color-tertiary-fixed-dim: #8acfff;
+    --color-on-tertiary-fixed: #001e30;
+    --color-on-tertiary-fixed-variant: #004b6f;
 
     --color-error: #ba1a1a;
     --color-on-error: #ffffff;
     --color-error-container: #ffdad6;
     --color-on-error-container: #93000a;
 
-    --color-background: #faf8fe;
-    --color-on-background: #1a1b20;
-    --color-surface: #faf8fe;
-    --color-on-surface: #1a1b20;
-    --color-surface-variant: #e3e2e7;
-    --color-on-surface-variant: #444650;
-    --color-surface-bright: #faf8fe;
-    --color-surface-dim: #dbd9df;
+    --color-background: #fff;
+    --color-on-background: #191b23;
+    --color-surface: #f9f9ff;
+    --color-on-surface: #191b23;
+    --color-surface-variant: #e0e2ee;
+    --color-on-surface-variant: #43474f;
+    --color-surface-bright: #f9f9ff;
+    --color-surface-dim: #d8dae5;
     --color-surface-container-lowest: #ffffff;
-    --color-surface-container-low: #f4f3f9;
-    --color-surface-container: #efedf3;
-    --color-surface-container-high: #e9e7ed;
-    --color-surface-container-highest: #e3e2e7;
-    --color-inverse-surface: #2f3035;
-    --color-inverse-on-surface: #f2f0f6;
+    --color-surface-container-low: #f3f3fc;
+    --color-surface-container: #edeef6;
+    --color-surface-container-high: #e7e8f1;
+    --color-surface-container-highest: #e2e2eb;
+    --color-inverse-surface: #2e3038;
+    --color-inverse-on-surface: #f0f0f8;
 
-    --color-outline: #757681;
-    --color-outline-variant: #c5c6d1;
+    --color-outline: #74777f;
+    --color-outline-variant: #c4c6d0;
 
     /* Named spacing */
     --spacing-xs: 4px;
@@ -156,6 +156,6 @@ body {
     background-image: linear-gradient(
         to bottom,
         transparent,
-        rgba(0, 13, 47, 0.8)
+        rgba(0, 48, 130, 0.8)
     );
 }
