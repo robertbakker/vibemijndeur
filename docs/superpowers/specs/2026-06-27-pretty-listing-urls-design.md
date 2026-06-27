@@ -105,6 +105,16 @@ for context. Prevents a globally-unique buurt name squatting a bare root URL.
 This rule lives inside `AreaSegment::match()` (handlers self-gate, like the old
 `GeneralSegment` gating on `isFirst()`).
 
+## Namespace / layout
+
+All routing classes live under `App\Router`:
+
+- `App\Router\UrlSegment` (interface), `App\Router\SegmentCursor`, `App\Router\ListingUrlMapper`,
+  `App\Router\ListingQuery`, `App\Router\CanonicalPath`, `App\Router\UnmatchedSegmentException`.
+- Handlers under `App\Router\Segments\` (`AreaSegment`, `StatusSegment`, `TypeSegment`,
+  `AuthoritySegment`, `RoadworkSegment`).
+- The `Slug` Eloquent model stays in `App\Models`.
+
 ## Segment handlers
 
 Path grammar (listing): `[area]? [status]? [type]? [authority]?` + query string

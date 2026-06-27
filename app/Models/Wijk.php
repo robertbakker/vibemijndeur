@@ -40,4 +40,14 @@ class Wijk extends Model
     {
         return $this->hasMany(Buurt::class);
     }
+
+    protected function roadworkPivotTable(): string
+    {
+        return 'roadwork_wijk';
+    }
+
+    protected function roadworkForeignKey(): string
+    {
+        return 'wijk_id';
+    }
 }

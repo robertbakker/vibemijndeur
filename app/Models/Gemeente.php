@@ -45,4 +45,14 @@ class Gemeente extends Model
     {
         return $this->hasMany(Buurt::class);
     }
+
+    protected function roadworkPivotTable(): string
+    {
+        return 'roadwork_gemeente';
+    }
+
+    protected function roadworkForeignKey(): string
+    {
+        return 'gemeente_id';
+    }
 }

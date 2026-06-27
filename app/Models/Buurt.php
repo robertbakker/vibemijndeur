@@ -41,4 +41,14 @@ class Buurt extends Model
     {
         return $this->belongsTo(Gemeente::class);
     }
+
+    protected function roadworkPivotTable(): string
+    {
+        return 'roadwork_buurt';
+    }
+
+    protected function roadworkForeignKey(): string
+    {
+        return 'buurt_id';
+    }
 }

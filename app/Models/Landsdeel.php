@@ -33,4 +33,14 @@ class Landsdeel extends Model
     {
         return $this->hasMany(Provincie::class);
     }
+
+    protected function roadworkPivotTable(): string
+    {
+        return 'roadwork_landsdeel';
+    }
+
+    protected function roadworkForeignKey(): string
+    {
+        return 'landsdeel_id';
+    }
 }

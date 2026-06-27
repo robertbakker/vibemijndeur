@@ -40,4 +40,14 @@ class Provincie extends Model
     {
         return $this->hasMany(Gemeente::class);
     }
+
+    protected function roadworkPivotTable(): string
+    {
+        return 'roadwork_provincie';
+    }
+
+    protected function roadworkForeignKey(): string
+    {
+        return 'provincie_id';
+    }
 }

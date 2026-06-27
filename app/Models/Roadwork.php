@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Actions\LinkRoadworkToArea;
 use App\Data\RoadworkStatus;
 use App\Roadworks\Data\RoadworkDocument;
 use App\Roadworks\RoadworkGeometry;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Laravel\Scout\Searchable;
@@ -110,6 +112,35 @@ class Roadwork extends Model
     public function currentSlug(): HasOne
     {
         return $this->hasOne(RoadworkSlug::class)->where('is_current', true);
+    }
+
+    /**
+     * The CBS areas this roadwork's geometry intersects, by level. Links are
+     * maintained by the {@see LinkRoadworkToArea} actions.
+     */
+    public function landsdelen(): BelongsToMany
+    {
+        return $this->belongsToMany(Landsdeel::class, 'roadwork_landsdeel', 'roadwork_id', 'landsdeel_id');
+    }
+
+    public function provincies(): BelongsToMany
+    {
+        return $this->belongsToMany(Provincie::class, 'roadwork_provincie', 'roadwork_id', 'provincie_id');
+    }
+
+    public function gemeenten(): BelongsToMany
+    {
+        return $this->belongsToMany(Gemeente::class, 'roadwork_gemeente', 'roadwork_id', 'gemeente_id');
+    }
+
+    public function wijken(): BelongsToMany
+    {
+        return $this->belongsToMany(Wijk::class, 'roadwork_wijk', 'roadwork_id', 'wijk_id');
+    }
+
+    public function buurten(): BelongsToMany
+    {
+        return $this->belongsToMany(Buurt::class, 'roadwork_buurt', 'roadwork_id', 'buurt_id');
     }
 
     /**

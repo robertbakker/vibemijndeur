@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Roadworks;
 
+use App\Events\RoadworkSaved;
 use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -82,6 +83,8 @@ final class RoadworkUpserter
         );
 
         $this->slugs->sync((int) $row->id);
+
+        RoadworkSaved::dispatch((int) $row->id, (bool) $row->inserted);
 
         return (bool) $row->inserted;
     }

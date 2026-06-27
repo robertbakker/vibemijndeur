@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\RoadworkSaved;
+use App\Listeners\LinkRoadworkAreas;
 use App\Melvin\Client;
 use App\Melvin\OAuth2Client;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider;
@@ -45,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Event::listen(RoadworkSaved::class, LinkRoadworkAreas::class);
     }
 
     /**
