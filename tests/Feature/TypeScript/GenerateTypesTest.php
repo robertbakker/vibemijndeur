@@ -32,10 +32,17 @@ class GenerateTypesTest extends TestCase
             $contents,
         );
 
-        // RoadworkCard emits the precise `badge` object shape (label + class),
-        // not a loose `any`/`array`.
+        // ProjectDetail's numeric `progress` is emitted as `number`, proving a
+        // typed scalar (not a loose `any`) flows through from the DTO.
         $this->assertMatchesRegularExpression(
-            '/export type RoadworkCard = \{.*?badge: \{\s*label: string,\s*class: string,\s*\}/s',
+            '/export type ProjectDetail = \{.*?progress: number,/s',
+            $contents,
+        );
+
+        // RoadworkCard carries the design's status palette fields as typed
+        // strings — the card DTO is the single source of truth for the UI.
+        $this->assertMatchesRegularExpression(
+            '/export type RoadworkCard = \{.*?statusKey: string,.*?markerColor: string,/s',
             $contents,
         );
     }

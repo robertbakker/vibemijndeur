@@ -4,6 +4,8 @@ import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { type IconGlyph, MARKER_ICONS } from '@/lib/markerIcons';
+import { typeView } from '@/lib/roadwork';
 
 export interface RoadworkFeatureProps {
     id: number;
@@ -13,6 +15,9 @@ export interface RoadworkFeatureProps {
     status: string | null;
     authority: string | null;
     slug?: string;
+    activityType?: string | null;
+    startTs?: number | null;
+    endTs?: number | null;
 }
 
 export interface MapFilters {
@@ -27,6 +32,7 @@ const emit = defineEmits<{
     (event: 'select', feature: RoadworkFeatureProps): void;
     (event: 'facets', facets: Record<string, Record<string, number>>): void;
     (event: 'total', total: number): void;
+    (event: 'visible', features: RoadworkFeatureProps[]): void;
 }>();
 
 const mapContainer = useTemplateRef<HTMLDivElement>('mapContainer');
@@ -48,6 +54,12 @@ const PMTILES_BOUNDS: [[number, number], [number, number]] = [
 ];
 const PMTILES_MAX_ZOOM = 15;
 
+// Marker fill per lifecycle status — matches the design palette and the /kaart
+// legend (in uitvoering / gepland / afgerond).
+const STATUS_ACTIVE = '#FFC400';
+const STATUS_PLANNED = '#2F6BD8';
+const STATUS_DONE = '#1F8A5B';
+
 // Detour/restriction lines draw from this zoom (matches the 2024 map's minzoom 10).
 const GEOMETRY_MIN_ZOOM = 10;
 // Arrows/crosses are fine detail — a bit further in, and only for the active one.
@@ -62,6 +74,17 @@ const ARROW_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0961ed"/><stop offset="1" stop-color="#00298a"/></linearGradient></defs><path d="M35 20 L10 6 L18 20 L10 34 Z" fill="url(#ag)" stroke="#001a4d" stroke-width="2.5" stroke-linejoin="round"/></svg>';
 const CROSS_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M11 11 L29 29 M29 11 L11 29" fill="none" stroke="#2e0a0a" stroke-width="10" stroke-linecap="round"/><path d="M11 11 L29 29 M29 11 L11 29" fill="none" stroke="#861717" stroke-width="6" stroke-linecap="round"/></svg>';
+
+// A white Font Awesome glyph centred in a square viewBox, ready to rasterise
+// onto a status-coloured marker. FA viewBoxes aren't square, so the path is
+// translated to keep its aspect ratio instead of stretching.
+function whiteGlyphSvg(glyph: IconGlyph): string {
+    const [, , width, height] = glyph.viewBox.split(' ').map(Number);
+    const side = Math.max(width, height);
+    const offsetX = (side - width) / 2;
+    const offsetY = (side - height) / 2;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 ${side} ${side}"><path d="${glyph.path}" fill="#ffffff" transform="translate(${offsetX} ${offsetY})"/></svg>`;
+}
 
 interface RoadworksResponse {
     features: GeoJSON.Feature[];
@@ -106,6 +129,19 @@ async function loadPoints(): Promise<void> {
     const params = filterParams();
     params.set('bbox', COUNTRY_BBOX);
     const data = await apiFetch(params);
+    // Tag each point with its Font Awesome icon name so the symbol layer can
+    // draw the per-type glyph (mirrors App\Roadworks\RoadworkType server-side).
+    for (const feature of data.features) {
+        const featureProps = (feature.properties ?? {}) as Record<
+            string,
+            unknown
+        >;
+        featureProps.icon = typeView(
+            (featureProps.activityType as string | null) ?? null,
+            (featureProps.title as string | null) ?? null,
+        ).icon;
+        feature.properties = featureProps;
+    }
     source.setData({ type: 'FeatureCollection', features: data.features });
 }
 
@@ -177,7 +213,50 @@ async function search(): Promise<number> {
     return data.total;
 }
 
-defineExpose({ search });
+// Roadworks whose point markers are currently rendered in the viewport, capped
+// and deduped, for the list panel beside the map.
+const VISIBLE_LIMIT = 40;
+
+function emitVisible(): void {
+    const m = map.value;
+    if (!m?.getLayer('points')) {
+        return;
+    }
+    const seen = new Set<number>();
+    const list: RoadworkFeatureProps[] = [];
+    for (const feature of m.queryRenderedFeatures({ layers: ['points'] })) {
+        const featureProps =
+            feature.properties as unknown as RoadworkFeatureProps;
+        if (seen.has(featureProps.id)) {
+            continue;
+        }
+        seen.add(featureProps.id);
+        list.push(featureProps);
+        if (list.length >= VISIBLE_LIMIT) {
+            break;
+        }
+    }
+    emit('visible', list);
+}
+
+// Fly to a roadwork's point (used when a list row is clicked), leaving room for
+// the list panel and popup.
+function focus(id: number): void {
+    const m = map.value;
+    const feature = m
+        ?.querySourceFeatures(SOURCE)
+        .find((candidate) => (candidate.properties?.id as number) === id);
+    if (m && feature && feature.geometry.type === 'Point') {
+        m.easeTo({
+            center: feature.geometry.coordinates as [number, number],
+            zoom: Math.max(m.getZoom(), ICON_MIN_ZOOM),
+            padding: { left: 360, right: 440, top: 0, bottom: 0 },
+            duration: 500,
+        });
+    }
+}
+
+defineExpose({ search, focus });
 
 // The highlighted roadwork is the hovered one, or the selected one otherwise.
 // Its detour/restriction lines light up (coloured outline + line + markers) while
@@ -286,6 +365,18 @@ onMounted(() => {
                 pixelRatio: 2,
             });
         }
+
+        // One white glyph image per work type, keyed by its `fa-*` name so the
+        // marker symbol layer can pick it via icon-image: ['get', 'icon'].
+        await Promise.all(
+            Object.entries(MARKER_ICONS).map(async ([name, glyph]) => {
+                if (instance.hasImage(name)) {
+                    return;
+                }
+                const image = await loadSvgImage(whiteGlyphSvg(glyph), 36);
+                instance.addImage(name, image, { pixelRatio: 2 });
+            }),
+        );
 
         instance.addSource(SOURCE, { type: 'geojson', data: EMPTY_GEOJSON });
         instance.addSource(GEOM_SOURCE, {
@@ -396,34 +487,63 @@ onMounted(() => {
             },
         });
 
-        // One marker per roadwork, coloured by severity, on top.
+        // One marker per roadwork, coloured by lifecycle status (mirrors
+        // App\Data\RoadworkStatus: running → in uitvoering, final → afgerond,
+        // else derived from the start/end dates), with the design's white ring.
+        const nowTs = Math.floor(Date.now() / 1000);
         instance.addLayer({
             id: 'points',
             type: 'circle',
             source: SOURCE,
             paint: {
                 'circle-color': [
-                    'match',
-                    ['get', 'severity'],
-                    'high',
-                    '#ba1a1a',
-                    'medium',
-                    '#775a00',
-                    '#003082',
+                    'case',
+                    ['==', ['get', 'status'], 'running'],
+                    STATUS_ACTIVE,
+                    ['==', ['get', 'status'], 'final'],
+                    STATUS_DONE,
+                    ['>', ['number', ['get', 'startTs'], 0], nowTs],
+                    STATUS_PLANNED,
+                    ['<', ['number', ['get', 'endTs'], 9999999999], nowTs],
+                    STATUS_DONE,
+                    STATUS_ACTIVE,
                 ],
                 'circle-radius': [
                     'interpolate',
                     ['linear'],
                     ['zoom'],
                     7,
-                    3,
+                    4,
                     12,
-                    6,
+                    7,
                     15,
-                    9,
+                    10,
                 ],
-                'circle-stroke-width': 1.5,
+                'circle-stroke-width': 2.5,
                 'circle-stroke-color': '#ffffff',
+            },
+        });
+
+        // White per-type glyph centred on each marker, from a bit further in so
+        // the discs don't overlap into mush at country zoom.
+        instance.addLayer({
+            id: 'point-icons',
+            type: 'symbol',
+            source: SOURCE,
+            minzoom: 11,
+            layout: {
+                'icon-image': ['get', 'icon'],
+                'icon-size': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    11,
+                    0.22,
+                    15,
+                    0.34,
+                ],
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
             },
         });
 
@@ -464,6 +584,7 @@ onMounted(() => {
         });
 
         instance.on('moveend', () => updateViewport());
+        instance.on('idle', () => emitVisible());
         applyActiveFilter();
         loadPoints();
         updateViewport();

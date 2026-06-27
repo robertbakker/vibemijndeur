@@ -8,7 +8,7 @@ import AppHeader from '@/components/AppHeader.vue';
         class="flex min-h-screen flex-col bg-background font-body-md text-body-md text-on-surface antialiased"
     >
         <AppHeader />
-        <main class="mx-auto w-full max-w-7xl flex-1 px-margin-desktop">
+        <main class="flex-1">
             <slot />
         </main>
         <AppFooter />

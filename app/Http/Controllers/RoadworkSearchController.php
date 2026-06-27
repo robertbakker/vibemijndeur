@@ -123,6 +123,9 @@ class RoadworkSearchController extends Controller
                     'status' => $hit['status'] ?? null,
                     'authority' => $hit['road_authority'] ?? null,
                     'slug' => $hit['slug'] ?? null,
+                    'activityType' => $hit['activity_type'] ?? null,
+                    'startTs' => $hit['start_ts'] ?? null,
+                    'endTs' => $hit['end_ts'] ?? null,
                 ],
             ];
         }

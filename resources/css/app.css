@@ -4,26 +4,34 @@
 @source "../../storage/framework/views/*.php";
 
 @theme {
-    /* Colors (Material 3 — VoorMijnDeur NS/ANWB blue/yellow) */
-    --color-primary: #003082;
+    /* Colors (VoorMijnDeur — navy/yellow design system) */
+    --color-primary: #0b2c5e;
     --color-on-primary: #ffffff;
-    --color-primary-container: #00256a;
-    --color-on-primary-container: #aec3ff;
-    --color-primary-fixed: #dae2ff;
+    --color-primary-container: #143c73;
+    --color-on-primary-container: #aec0de;
+    --color-primary-fixed: #dde6f5;
     --color-primary-fixed-dim: #aec3ff;
-    --color-on-primary-fixed: #001847;
+    --color-on-primary-fixed: #0b2c5e;
     --color-on-primary-fixed-variant: #1a4699;
-    --color-inverse-primary: #aec3ff;
-    --color-surface-tint: #003082;
+    --color-inverse-primary: #aec0de;
+    --color-surface-tint: #0b2c5e;
+
+    /* Footer / deepest navy */
+    --color-primary-dark: #08234a;
 
     --color-secondary: #806100;
     --color-on-secondary: #ffffff;
-    --color-secondary-container: #ffc917;
-    --color-on-secondary-container: #5c4500;
+    --color-secondary-container: #ffd200;
+    --color-on-secondary-container: #0b2c5e;
     --color-secondary-fixed: #ffe08a;
-    --color-secondary-fixed-dim: #ffc917;
+    --color-secondary-fixed-dim: #ffd200;
     --color-on-secondary-fixed: #281c00;
     --color-on-secondary-fixed-variant: #614700;
+
+    /* Status accents (in uitvoering / gepland / afgerond) */
+    --color-status-active: #ffc400;
+    --color-status-planned: #2f6bd8;
+    --color-status-done: #1f8a5b;
 
     --color-tertiary: #006397;
     --color-on-tertiary: #ffffff;
@@ -39,24 +47,24 @@
     --color-error-container: #ffdad6;
     --color-on-error-container: #93000a;
 
-    --color-background: #fff;
-    --color-on-background: #191b23;
-    --color-surface: #f9f9ff;
-    --color-on-surface: #191b23;
+    --color-background: #eef2f7;
+    --color-on-background: #1a2230;
+    --color-surface: #ffffff;
+    --color-on-surface: #1a2230;
     --color-surface-variant: #e0e2ee;
-    --color-on-surface-variant: #43474f;
-    --color-surface-bright: #f9f9ff;
+    --color-on-surface-variant: #5a6577;
+    --color-surface-bright: #ffffff;
     --color-surface-dim: #d8dae5;
     --color-surface-container-lowest: #ffffff;
-    --color-surface-container-low: #f3f3fc;
-    --color-surface-container: #edeef6;
-    --color-surface-container-high: #e7e8f1;
+    --color-surface-container-low: #f6f8fb;
+    --color-surface-container: #eef2f7;
+    --color-surface-container-high: #f2f5f9;
     --color-surface-container-highest: #e2e2eb;
     --color-inverse-surface: #2e3038;
     --color-inverse-on-surface: #f0f0f8;
 
-    --color-outline: #74777f;
-    --color-outline-variant: #c4c6d0;
+    --color-outline: #8a93a3;
+    --color-outline-variant: #e2e7ee;
 
     /* Named spacing */
     --spacing-xs: 4px;
@@ -158,4 +166,19 @@ body {
         transparent,
         rgba(0, 48, 130, 0.8)
     );
+}
+
+@keyframes vmdpulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.6);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+
+.vmd-pulse {
+    animation: vmdpulse 1.6s ease-out infinite;
 }
