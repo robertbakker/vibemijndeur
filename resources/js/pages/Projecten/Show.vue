@@ -58,6 +58,7 @@ defineOptions({ layout: AppLayout });
             <aside class="gap-stack-lg flex flex-col lg:col-span-4">
                 <ProjectNotify />
                 <ProjectMap
+                    :roadwork-id="project.id"
                     :location-label="project.locationLabel"
                     :latitude="project.latitude"
                     :longitude="project.longitude"

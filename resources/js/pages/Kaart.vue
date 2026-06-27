@@ -59,9 +59,9 @@ function severityColor(severity: string | null): string {
         <main class="relative flex flex-1 overflow-hidden">
             <!-- Filters sidebar -->
             <aside
-                class="bg-surface-container-low border-outline-variant z-40 hidden h-full w-80 flex-col border-r md:flex"
+                class="bg-surface-container-low border-outline-variant z-40 hidden h-full w-64 flex-col border-r md:flex"
             >
-                <div class="p-stack-lg border-outline-variant border-b">
+                <div class="p-stack-md border-outline-variant border-b">
                     <h2 class="font-headline-md text-headline-md text-primary">
                         Filters
                     </h2>
@@ -117,7 +117,7 @@ function severityColor(severity: string | null): string {
                     </button>
 
                     <div
-                        class="mt-stack-xl p-stack-lg border-outline-variant rounded-xl border bg-white shadow-sm"
+                        class="mt-stack-xl p-stack-md border-outline-variant rounded-xl border bg-white shadow-sm"
                     >
                         <h3
                             class="font-label-md text-label-md text-primary mb-stack-md tracking-wider uppercase"
