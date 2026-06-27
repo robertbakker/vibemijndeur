@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
+import { typescriptTransform } from './resources/js/vite-plugin-typescript-transform';
 
 export default defineConfig({
     plugins: [
@@ -21,6 +22,7 @@ export default defineConfig({
                 },
             },
         }),
+        typescriptTransform(),
         wayfinder({
             formVariants: true,
         }),
