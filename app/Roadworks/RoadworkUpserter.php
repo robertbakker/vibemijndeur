@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class RoadworkUpserter
 {
+    public function __construct(private readonly RoadworkSlugSynchronizer $slugs) {}
+
     private const PROMOTED = [
         'kind', 'severity', 'status', 'hindrance', 'activity_type',
         'published', 'road_authority', 'start_date', 'end_date',
@@ -24,7 +26,6 @@ final class RoadworkUpserter
      * @param  array<string, mixed>  $promoted  subset of self::PROMOTED
      * @param  array<string, mixed>|null  $point  GeoJSON Point, or null
      * @param  array<string, mixed>  $document  the feature jsonb document
-     *
      * @return bool true if a new row was inserted, false if an existing row was updated
      */
     public function upsert(string $source, string $sourceId, array $promoted, ?array $point, array $document, DateTimeInterface $seenAt): bool
@@ -64,7 +65,7 @@ final class RoadworkUpserter
                     published=EXCLUDED.published, road_authority=EXCLUDED.road_authority,
                     start_date=EXCLUDED.start_date, end_date=EXCLUDED.end_date,
                     coordinates=EXCLUDED.coordinates, feature=EXCLUDED.feature
-                RETURNING (xmax = 0) AS inserted
+                RETURNING id, (xmax = 0) AS inserted
                 SQL,
             $bindings,
         );
@@ -72,13 +73,15 @@ final class RoadworkUpserter
         // Feed-presence tracking lives outside the versioned table (no trigger),
         // so bumping last_seen_at on every import never churns history.
         DB::statement(
-            <<<SQL
+            <<<'SQL'
                 INSERT INTO roadwork_seen (source, source_id, first_seen_at, last_seen_at)
                 VALUES (?, ?, ?::timestamptz, ?::timestamptz)
                 ON CONFLICT (source, source_id) DO UPDATE SET last_seen_at = EXCLUDED.last_seen_at
                 SQL,
             [$source, $sourceId, $seen, $seen],
         );
+
+        $this->slugs->sync((int) $row->id);
 
         return (bool) $row->inserted;
     }
