@@ -24,7 +24,7 @@ final class RoadworkSearch
      *
      * @var list<string>
      */
-    private const POINT_ATTRIBUTES = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', '_geo'];
+    private const POINT_ATTRIBUTES = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', 'slug', '_geo'];
 
     /**
      * Roadworks whose representative point is within `$meters` of a lat/lng,
@@ -32,7 +32,7 @@ final class RoadworkSearch
      *
      * @param  list<string>  $facets  filterable attributes to return counts for, e.g. ['status', 'kind']
      * @param  array<string, string|int|bool|list<string|int>>  $filters  extra scalar facet filters, e.g. ['status' => 'active']
-     * @return array<string, mixed>  raw Meilisearch response (`hits`, `facetDistribution`, `estimatedTotalHits`, ...)
+     * @return array<string, mixed> raw Meilisearch response (`hits`, `facetDistribution`, `estimatedTotalHits`, ...)
      */
     public function nearby(string $query, float $latitude, float $longitude, int $meters, array $facets = [], array $filters = [], int $limit = 20): array
     {

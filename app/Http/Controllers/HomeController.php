@@ -26,6 +26,7 @@ class HomeController extends Controller
             ->where(fn ($query) => $query->whereNull('end_date')->orWhere('end_date', '>=', now()))
             ->orderByRaw("array_position(ARRAY['high','medium','low'], severity)")
             ->orderByDesc('start_date')
+            ->with('currentSlug')
             ->limit(7)
             ->get();
 

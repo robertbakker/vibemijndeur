@@ -39,6 +39,9 @@ class ProjectPageTest extends TestCase
                 ->component('Projecten/Show')
                 ->where('project.title', 'GAS Hoofdstraat')
                 ->where('project.authority', "Gemeente 's-Gravenhage")
+                ->where('project.slug', 's-gravenhage-gas-hoofdstraat')
+                ->whereNot('project.latitude', null)
+                ->whereNot('project.longitude', null)
             );
     }
 

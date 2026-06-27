@@ -28,6 +28,7 @@ class ProjectDetail extends Data
         public string $locationLabel,
         public ?float $latitude,
         public ?float $longitude,
+        public ?string $slug,
     ) {}
 
     public static function fromModel(Roadwork $roadwork): self
@@ -46,6 +47,7 @@ class ProjectDetail extends Data
             locationLabel: $roadwork->road_authority ?? 'Nederland',
             latitude: self::coordinate($roadwork, 'lat'),
             longitude: self::coordinate($roadwork, 'lng'),
+            slug: $roadwork->currentSlug?->slug,
         );
     }
 

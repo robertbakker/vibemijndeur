@@ -32,6 +32,7 @@ class RoadworkCard extends Data
         public ?string $authority,
         public string $authorityInitials,
         public ?string $endLabel,
+        public ?string $slug,
     ) {}
 
     public static function fromModel(Roadwork $roadwork): self
@@ -45,6 +46,7 @@ class RoadworkCard extends Data
             authority: $roadwork->road_authority,
             authorityInitials: self::initials($roadwork->road_authority),
             endLabel: self::endLabel($roadwork),
+            slug: $roadwork->currentSlug?->slug,
         );
     }
 

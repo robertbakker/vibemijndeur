@@ -53,12 +53,14 @@ class RoadworkSearchApiTest extends TestCase
 
     public function test_bounding_box_search_returns_geojson_features(): void
     {
-        $this->getJson('/api/roadworks?bbox=4.9,51.9,5.3,52.2')
+        $response = $this->getJson('/api/roadworks?bbox=4.9,51.9,5.3,52.2')
             ->assertOk()
             ->assertJsonPath('type', 'FeatureCollection')
             ->assertJsonPath('features.0.geometry.type', 'Point')
             ->assertJsonPath('features.0.properties.authority', 'Gemeente Utrecht')
             ->assertJsonStructure(['facets' => ['kind', 'severity', 'status']]);
+
+        $this->assertNotEmpty($response->json('features.0.properties.slug'));
     }
 
     public function test_text_search_without_bbox_finds_by_description(): void
