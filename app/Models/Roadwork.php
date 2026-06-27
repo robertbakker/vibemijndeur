@@ -67,6 +67,9 @@ class Roadwork extends Model
             'status_key' => $status->value,
             'status_order' => $status->order(),
             'work_type' => RoadworkType::for($this)['label'],
+            // CBS administrative area the representative point falls in;
+            // gemeente + provincie are facets, wijk/buurt are stored context.
+            ...$this->administrativeAreas(),
             // Unix timestamps so Meilisearch can range-filter and sort on them.
             'start_ts' => $this->start_date ? strtotime((string) $this->start_date) : null,
             'end_ts' => $this->end_date ? strtotime((string) $this->end_date) : null,
@@ -101,7 +104,7 @@ class Roadwork extends Model
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->withRepresentativePoint()->with('currentSlug');
+        return $query->withRepresentativePoint()->withAdministrativeAreas()->with('currentSlug');
     }
 
     public function currentSlug(): HasOne
@@ -121,6 +124,85 @@ class Roadwork extends Model
             ->select('roadworks.*')
             ->selectRaw('ST_Y(ST_PointOnSurface(coordinates)) as geo_lat')
             ->selectRaw('ST_X(ST_PointOnSurface(coordinates)) as geo_lng');
+    }
+
+    /**
+     * Resolve each roadwork's representative point to the CBS administrative
+     * area it falls in (buurt → wijk → gemeente → provincie) for the whole
+     * import batch, via a single lateral spatial join, so {@see toSearchableArray()}
+     * doesn't issue a per-row PostGIS query. Areas are reference data the user
+     * loads into the `buurten`/`gemeenten`/… tables; an unmatched point (no
+     * area loaded, or offshore) simply yields null columns.
+     */
+    #[Scope]
+    protected function withAdministrativeAreas(Builder $query): Builder
+    {
+        return $query
+            ->leftJoinLateral(function (\Illuminate\Database\Query\Builder $sub): void {
+                $sub->from('buurten as b')
+                    ->select('b.name as buurt_name', 'b.wijk_id', 'b.gemeente_id')
+                    ->whereRaw('ST_Contains(b.geometry, ST_PointOnSurface(roadworks.coordinates))')
+                    ->limit(1);
+            }, 'area')
+            ->leftJoin('wijken as w', 'w.id', '=', 'area.wijk_id')
+            ->leftJoin('gemeenten as g', 'g.id', '=', 'area.gemeente_id')
+            ->leftJoin('provincies as p', 'p.id', '=', 'g.provincie_id')
+            ->addSelect([
+                'area.buurt_name',
+                'w.name as wijk_name',
+                'g.name as gemeente_name',
+                'g.code as gemeente_code',
+                'p.name as provincie_name',
+                'p.code as provincie_code',
+            ]);
+    }
+
+    /**
+     * The administrative area names/codes for the search document. Uses the
+     * eager-loaded columns from {@see scopeWithAdministrativeAreas()} when the
+     * batch import selected them, else a single lateral PostGIS lookup.
+     *
+     * @return array{gemeente: ?string, gemeente_code: ?string, provincie: ?string, provincie_code: ?string, wijk: ?string, buurt: ?string}
+     */
+    private function administrativeAreas(): array
+    {
+        if (array_key_exists('gemeente_name', $this->attributes)) {
+            return [
+                'gemeente' => $this->getAttribute('gemeente_name'),
+                'gemeente_code' => $this->getAttribute('gemeente_code'),
+                'provincie' => $this->getAttribute('provincie_name'),
+                'provincie_code' => $this->getAttribute('provincie_code'),
+                'wijk' => $this->getAttribute('wijk_name'),
+                'buurt' => $this->getAttribute('buurt_name'),
+            ];
+        }
+
+        $row = DB::selectOne(
+            'SELECT g.name AS gemeente, g.code AS gemeente_code,
+                    p.name AS provincie, p.code AS provincie_code,
+                    w.name AS wijk, area.buurt_name AS buurt
+             FROM roadworks r
+             LEFT JOIN LATERAL (
+                 SELECT b.name AS buurt_name, b.wijk_id, b.gemeente_id
+                 FROM buurten b
+                 WHERE ST_Contains(b.geometry, ST_PointOnSurface(r.coordinates))
+                 LIMIT 1
+             ) area ON true
+             LEFT JOIN wijken w ON w.id = area.wijk_id
+             LEFT JOIN gemeenten g ON g.id = area.gemeente_id
+             LEFT JOIN provincies p ON p.id = g.provincie_id
+             WHERE r.id = ? AND r.coordinates IS NOT NULL',
+            [$this->id],
+        );
+
+        return [
+            'gemeente' => $row?->gemeente,
+            'gemeente_code' => $row?->gemeente_code,
+            'provincie' => $row?->provincie,
+            'provincie_code' => $row?->provincie_code,
+            'wijk' => $row?->wijk,
+            'buurt' => $row?->buurt,
+        ];
     }
 
     /**

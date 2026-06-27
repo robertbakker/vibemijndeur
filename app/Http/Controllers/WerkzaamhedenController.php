@@ -22,12 +22,16 @@ class WerkzaamhedenController extends Controller
 {
     private const PER_PAGE = 24;
 
+    private const MAX_FACET_OPTIONS = 12;
+
     /**
      * Facet group => the Meilisearch attribute it filters/counts on.
      */
     private const FACETS = [
         'status' => 'status_key',
         'type' => 'work_type',
+        'gemeente' => 'gemeente',
+        'provincie' => 'provincie',
         'authority' => 'road_authority',
     ];
 
@@ -41,6 +45,10 @@ class WerkzaamhedenController extends Controller
             'status.*' => ['string'],
             'type' => ['nullable', 'array'],
             'type.*' => ['string'],
+            'gemeente' => ['nullable', 'array'],
+            'gemeente.*' => ['string'],
+            'provincie' => ['nullable', 'array'],
+            'provincie.*' => ['string'],
             'authority' => ['nullable', 'array'],
             'authority.*' => ['string'],
             'sort' => ['nullable', 'in:start,status'],
@@ -55,6 +63,8 @@ class WerkzaamhedenController extends Controller
         $selected = [
             'status_key' => array_values($validated['status'] ?? []),
             'work_type' => array_values($validated['type'] ?? []),
+            'gemeente' => array_values($validated['gemeente'] ?? []),
+            'provincie' => array_values($validated['provincie'] ?? []),
             'road_authority' => array_values($validated['authority'] ?? []),
         ];
         $filters = array_filter($selected, fn (array $values): bool => $values !== []);
@@ -81,6 +91,8 @@ class WerkzaamhedenController extends Controller
                 'q' => $query,
                 'status' => $selected['status_key'],
                 'type' => $selected['work_type'],
+                'gemeente' => $selected['gemeente'],
+                'provincie' => $selected['provincie'],
                 'authority' => $selected['road_authority'],
                 'sort' => $sort,
             ],
@@ -124,7 +136,7 @@ class WerkzaamhedenController extends Controller
      * group's filter applied but not its own.
      *
      * @param  array<string, list<string>>  $filters
-     * @return array{status: list<array<string, mixed>>, type: list<array<string, mixed>>, authority: list<array<string, mixed>>}
+     * @return array<string, list<array<string, mixed>>>
      */
     private function facets(string $query, array $filters): array
     {
@@ -142,6 +154,8 @@ class WerkzaamhedenController extends Controller
         return [
             'status' => $this->statusOptions($distributions['status'], $filters['status_key'] ?? []),
             'type' => $this->countOptions($distributions['type'], $filters['work_type'] ?? []),
+            'gemeente' => $this->countOptions($distributions['gemeente'], $filters['gemeente'] ?? []),
+            'provincie' => $this->countOptions($distributions['provincie'], $filters['provincie'] ?? []),
             'authority' => $this->countOptions($distributions['authority'], $filters['road_authority'] ?? []),
         ];
     }
@@ -170,7 +184,9 @@ class WerkzaamhedenController extends Controller
     }
 
     /**
-     * Free-form facet options (type, authority), most results first.
+     * Free-form facet options (type, gemeente, provincie, authority), most
+     * results first and capped — long lists (gemeenten, uitvoerders) would
+     * otherwise swamp the sidebar. Currently-selected values are always kept.
      *
      * @param  array<string, int>  $distribution
      * @param  list<string>  $checked
@@ -182,11 +198,16 @@ class WerkzaamhedenController extends Controller
 
         $options = [];
         foreach ($distribution as $value => $count) {
+            $value = (string) $value;
+            $isChecked = in_array($value, $checked, true);
+            if (count($options) >= self::MAX_FACET_OPTIONS && ! $isChecked) {
+                continue;
+            }
             $options[] = [
-                'key' => (string) $value,
-                'label' => (string) $value,
+                'key' => $value,
+                'label' => $value,
                 'count' => $count,
-                'checked' => in_array((string) $value, $checked, true),
+                'checked' => $isChecked,
             ];
         }
 

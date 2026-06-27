@@ -96,6 +96,8 @@ return [
                     'status',
                     'status_key',
                     'work_type',
+                    'gemeente',
+                    'provincie',
                     'hindrance',
                     'activity_type',
                     'published',

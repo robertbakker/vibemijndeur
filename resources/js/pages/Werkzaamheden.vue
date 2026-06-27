@@ -20,12 +20,16 @@ const props = defineProps<{
     facets: {
         status: FacetOption[];
         type: FacetOption[];
+        gemeente: FacetOption[];
+        provincie: FacetOption[];
         authority: FacetOption[];
     };
     filters: {
         q: string;
         status: string[];
         type: string[];
+        gemeente: string[];
+        provincie: string[];
         authority: string[];
         sort: string;
     };
@@ -37,6 +41,8 @@ const props = defineProps<{
 const qInput = ref(props.filters.q);
 const statusSel = ref<string[]>([...props.filters.status]);
 const typeSel = ref<string[]>([...props.filters.type]);
+const gemeenteSel = ref<string[]>([...props.filters.gemeente]);
+const provincieSel = ref<string[]>([...props.filters.provincie]);
 const authSel = ref<string[]>([...props.filters.authority]);
 const sortSel = ref(props.filters.sort);
 const layout = ref<'list' | 'grid'>('list');
@@ -47,6 +53,18 @@ const facetGroups = computed(() => [
         title: 'Status',
         options: props.facets.status,
         model: statusSel,
+    },
+    {
+        key: 'gemeente',
+        title: 'Gemeente',
+        options: props.facets.gemeente,
+        model: gemeenteSel,
+    },
+    {
+        key: 'provincie',
+        title: 'Provincie',
+        options: props.facets.provincie,
+        model: provincieSel,
     },
     {
         key: 'type',
@@ -65,9 +83,7 @@ const facetGroups = computed(() => [
 const hasActive = computed(
     () =>
         qInput.value.trim().length > 0 ||
-        statusSel.value.length > 0 ||
-        typeSel.value.length > 0 ||
-        authSel.value.length > 0,
+        facetGroups.value.some((group) => group.model.value.length > 0),
 );
 
 const countWord = computed(() =>
@@ -87,6 +103,12 @@ function params(extra: Record<string, Param> = {}): Record<string, Param> {
     }
     if (typeSel.value.length) {
         payload.type = typeSel.value;
+    }
+    if (gemeenteSel.value.length) {
+        payload.gemeente = gemeenteSel.value;
+    }
+    if (provincieSel.value.length) {
+        payload.provincie = provincieSel.value;
     }
     if (authSel.value.length) {
         payload.authority = authSel.value;
@@ -127,6 +149,8 @@ function clearAll(): void {
     qInput.value = '';
     statusSel.value = [];
     typeSel.value = [];
+    gemeenteSel.value = [];
+    provincieSel.value = [];
     authSel.value = [];
     applyFilters();
 }
