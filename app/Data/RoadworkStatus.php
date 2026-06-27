@@ -75,6 +75,29 @@ enum RoadworkStatus: string
     }
 
     /**
+     * URL slug for the status facet in pretty listing paths.
+     */
+    public function slug(): string
+    {
+        return match ($this) {
+            self::Active => 'in-uitvoering',
+            self::Planned => 'gepland',
+            self::Done => 'afgerond',
+        };
+    }
+
+    public static function fromSlug(string $slug): ?self
+    {
+        foreach (self::cases() as $case) {
+            if ($case->slug() === $slug) {
+                return $case;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return StatusPalette
      */
     public function palette(): array

@@ -33,6 +33,19 @@ final class RoadworkType
     ];
 
     /**
+     * The distinct human labels (fallback included), for the type facet.
+     *
+     * @return list<string>
+     */
+    public static function labels(): array
+    {
+        $labels = array_map(static fn (array $rule): string => $rule[1], self::RULES);
+        $labels[] = 'Werkzaamheden';
+
+        return array_values(array_unique($labels));
+    }
+
+    /**
      * @return TypeView
      */
     public static function for(Roadwork $roadwork): array
