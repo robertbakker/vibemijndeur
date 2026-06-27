@@ -54,6 +54,54 @@ const PMTILES_BOUNDS: [[number, number], [number, number]] = [
 ];
 const PMTILES_MAX_ZOOM = 15;
 
+// Remember the last overview position so returning from a detail page (browser
+// back / Inertia history) drops you back where you were, not at the default.
+const VIEW_STORAGE_KEY = 'vmd:map-view';
+const DEFAULT_CENTER: [number, number] = [5.1214, 52.0907]; // Utrecht
+const DEFAULT_ZOOM = 11;
+
+interface SavedView {
+    center: [number, number];
+    zoom: number;
+}
+
+function readSavedView(): SavedView | null {
+    try {
+        const raw = localStorage.getItem(VIEW_STORAGE_KEY);
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        const { lng, lat, zoom } = parsed;
+        if (
+            typeof lng === 'number' &&
+            typeof lat === 'number' &&
+            typeof zoom === 'number'
+        ) {
+            return { center: [lng, lat], zoom };
+        }
+    } catch {
+        // Ignore unavailable/corrupt storage and fall back to the default view.
+    }
+    return null;
+}
+
+function saveView(instance: maplibregl.Map): void {
+    try {
+        const center = instance.getCenter();
+        localStorage.setItem(
+            VIEW_STORAGE_KEY,
+            JSON.stringify({
+                lng: center.lng,
+                lat: center.lat,
+                zoom: instance.getZoom(),
+            }),
+        );
+    } catch {
+        // Storage may be unavailable (private mode); persistence is best-effort.
+    }
+}
+
 // Marker fill per lifecycle status — matches the design palette and the /kaart
 // legend (in uitvoering / gepland / afgerond).
 const STATUS_ACTIVE = '#FFC400';
@@ -327,10 +375,11 @@ onMounted(() => {
     const protocol = new Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile);
 
+    const savedView = readSavedView();
     const instance = new maplibregl.Map({
         container,
-        center: [5.1214, 52.0907], // Utrecht
-        zoom: 11,
+        center: savedView?.center ?? DEFAULT_CENTER,
+        zoom: savedView?.zoom ?? DEFAULT_ZOOM,
         maxBounds: PMTILES_BOUNDS,
         maxZoom: PMTILES_MAX_ZOOM,
         canvasContextAttributes: { antialias: true },
@@ -587,7 +636,10 @@ onMounted(() => {
             setHovered(id ?? null);
         });
 
-        instance.on('moveend', () => updateViewport());
+        instance.on('moveend', () => {
+            updateViewport();
+            saveView(instance);
+        });
         instance.on('idle', () => emitVisible());
         applyActiveFilter();
         loadPoints();
