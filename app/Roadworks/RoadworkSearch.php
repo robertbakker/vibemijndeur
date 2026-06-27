@@ -15,7 +15,7 @@ use Meilisearch\Endpoints\Indexes;
  * response via `->raw()` — `->get()` would hydrate models but discard
  * `facetDistribution` and the per-hit `_geoDistance`.
  */
-final class RoadworkSearch
+class RoadworkSearch
 {
     /**
      * The small per-hit fields needed to render a marker. Requested explicitly

@@ -8,6 +8,7 @@ use App\Data\RoadworkCard;
 use App\Data\RoadworkStatus;
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkSearch;
+use App\Router\ListingQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -69,6 +70,37 @@ class WerkzaamhedenController extends Controller
         ];
         $filters = array_filter($selected, fn (array $values): bool => $values !== []);
 
+        return $this->render($query, $filters, $sort, $page);
+    }
+
+    /**
+     * Render the listing from a resolved pretty-URL {@see ListingQuery},
+     * merged with query-string refinements (q/sort/page).
+     */
+    public function renderFromQuery(ListingQuery $query, Request $request): Response
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+            'sort' => ['nullable', 'in:start,status'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $term = (string) ($validated['q'] ?? $query->term() ?? '');
+        $sort = $validated['sort'] ?? $query->sort() ?? 'start';
+        $page = max(1, (int) ($validated['page'] ?? $query->page()));
+
+        return $this->render($term, $query->toFilters(), $sort, $page);
+    }
+
+    /**
+     * Run the Meili search and render the Inertia page. Shared by the
+     * query-string entry ({@see __invoke}) and the pretty-URL entry
+     * ({@see renderFromQuery}).
+     *
+     * @param  array<string, list<string>>  $filters  keyed by Meili attribute
+     */
+    private function render(string $query, array $filters, string $sort, int $page): Response
+    {
         $sortExpression = $sort === 'status' ? ['status_order:asc'] : ['start_ts:asc'];
 
         $main = $this->search->browse(
@@ -89,11 +121,11 @@ class WerkzaamhedenController extends Controller
             'facets' => $this->facets($query, $filters),
             'filters' => [
                 'q' => $query,
-                'status' => $selected['status_key'],
-                'type' => $selected['work_type'],
-                'gemeente' => $selected['gemeente'],
-                'provincie' => $selected['provincie'],
-                'authority' => $selected['road_authority'],
+                'status' => $filters['status_key'] ?? [],
+                'type' => $filters['work_type'] ?? [],
+                'gemeente' => $filters['gemeente'] ?? [],
+                'provincie' => $filters['provincie'] ?? [],
+                'authority' => $filters['road_authority'] ?? [],
                 'sort' => $sort,
             ],
             'total' => $total,

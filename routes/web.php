@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoadworkGeometryController;
 use App\Http\Controllers\RoadworkSearchController;
@@ -32,7 +33,8 @@ Route::get('/tiles/basemap-nl.pmtiles', fn () => response()
     ->file(public_path('basemap-nl.pmtiles'), ['Content-Type' => 'application/octet-stream']))
     ->name('tiles.basemap');
 
-// Single-segment SEO detail pages. MUST stay last so named routes win.
-Route::get('/{slug}', [ProjectController::class, 'showBySlug'])
-    ->where('slug', '[a-z0-9-]+')
-    ->name('projecten.show');
+// Pretty hierarchical listing + roadwork detail catch-all. MUST stay last so
+// the named routes above win.
+Route::get('/{path}', ListingController::class)
+    ->where('path', '[a-z0-9-]+(?:/[a-z0-9-]+)*')
+    ->name('listing');
