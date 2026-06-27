@@ -12,7 +12,6 @@ import {
     statusView,
     typeView,
 } from '@/lib/roadwork';
-import { show } from '@/routes/projecten';
 
 const filters = reactive<MapFilters>({ q: '', kind: [], status: [] });
 const total = ref(0);
@@ -329,7 +328,7 @@ function selectFeature(feature: RoadworkFeatureProps): void {
                         </div>
                         <Link
                             v-if="popup.raw.slug"
-                            :href="show.url(popup.raw.slug)"
+                            :href="`/${popup.raw.slug}`"
                             class="block w-full rounded-[9px] bg-primary py-3 text-center text-[14px] font-bold text-on-primary"
                         >
                             Bekijk details →

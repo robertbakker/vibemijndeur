@@ -2,7 +2,6 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { show } from '@/routes/projecten';
 
 defineOptions({ layout: AppLayout });
 
@@ -248,7 +247,7 @@ const infoCards = [
             <Link
                 v-for="work in projects"
                 :key="work.id"
-                :href="work.slug ? show.url(work.slug) : '/kaart'"
+                :href="work.slug ? `/${work.slug}` : '/kaart'"
                 class="flex items-start gap-4 rounded-[14px] bg-white p-4.5 shadow-[0_1px_3px_rgba(10,30,60,0.08)] transition-shadow hover:shadow-[0_6px_20px_rgba(10,30,60,0.14)]"
             >
                 <div
