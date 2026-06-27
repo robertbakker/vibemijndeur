@@ -5,6 +5,7 @@ use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoadworkGeometryController;
 use App\Http\Controllers\RoadworkSearchController;
+use App\Http\Controllers\SuggestController;
 use App\Http\Controllers\WerkzaamhedenController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,8 @@ Route::get('/api/roadworks', RoadworkSearchController::class)->name('api.roadwor
 Route::get('/api/roadworks/{id}/geometry', RoadworkGeometryController::class)
     ->whereNumber('id')
     ->name('api.roadworks.geometry');
+
+Route::get('/api/suggest', SuggestController::class)->name('api.suggest');
 
 Route::get('/projecten/{id}', [ProjectController::class, 'redirectFromId'])
     ->whereNumber('id')
