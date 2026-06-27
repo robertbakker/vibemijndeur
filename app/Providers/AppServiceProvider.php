@@ -6,6 +6,11 @@ use App\Events\RoadworkSaved;
 use App\Listeners\LinkRoadworkAreas;
 use App\Melvin\Client;
 use App\Melvin\OAuth2Client;
+use App\Router\ListingUrlMapper;
+use App\Router\Segments\AreaSegment;
+use App\Router\Segments\AuthoritySegment;
+use App\Router\Segments\StatusSegment;
+use App\Router\Segments\TypeSegment;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +45,31 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(TypeScriptTransformerApplicationServiceProvider::class)) {
             $this->app->register(TypeScriptTransformerServiceProvider::class);
         }
+
+        $this->registerListingRouter();
+    }
+
+    /**
+     * The pretty-URL listing handlers and the bidirectional mapper built from them.
+     */
+    protected function registerListingRouter(): void
+    {
+        $this->app->tag([
+            AreaSegment::class,
+            StatusSegment::class,
+            TypeSegment::class,
+            AuthoritySegment::class,
+        ], 'listing.segments');
+
+        $this->app->singleton(ListingUrlMapper::class, fn ($app) => new ListingUrlMapper(
+            segments: array_values(iterator_to_array($app->tagged('listing.segments'))),
+            buildOrder: [
+                AreaSegment::class,
+                StatusSegment::class,
+                TypeSegment::class,
+                AuthoritySegment::class,
+            ],
+        ));
     }
 
     /**
