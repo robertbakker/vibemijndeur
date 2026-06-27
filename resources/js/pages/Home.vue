@@ -84,7 +84,7 @@ const featuredImage =
                 <!-- Bento-style grid -->
                 <div v-else class="grid grid-cols-1 gap-stack-lg md:grid-cols-2">
                     <!-- Featured project -->
-                    <Link v-if="featured" :href="`/projecten/${featured.id}`"
+                    <Link v-if="featured" :href="`/${featured.slug}`"
                         class="flex h-full flex-col overflow-hidden rounded-xl border border-outline-variant bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,32,91,0.08)] md:col-span-2 md:flex-row">
                         <div class="h-64 overflow-hidden md:h-auto md:w-1/2">
                             <div class="h-full w-full bg-cover bg-center" :style="{
@@ -129,7 +129,7 @@ const featuredImage =
                     </Link>
 
                     <!-- Regular projects -->
-                    <Link v-for="project in rest" :key="project.id" :href="`/projecten/${project.id}`"
+                    <Link v-for="project in rest" :key="project.id" :href="`/${project.slug}`"
                         class="group overflow-hidden rounded-xl border border-outline-variant bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,32,91,0.08)]">
                         <div class="relative flex h-32 items-center justify-center bg-surface-container-high">
                             <MaterialIcon name="construction"

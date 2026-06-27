@@ -12,6 +12,7 @@ export interface RoadworkFeatureProps {
     severity: string | null;
     status: string | null;
     authority: string | null;
+    slug?: string;
 }
 
 export interface MapFilters {

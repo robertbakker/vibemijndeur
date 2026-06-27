@@ -210,7 +210,7 @@ function severityColor(severity: string | null): string {
 
                     <div class="p-stack-lg border-outline-variant border-t">
                         <Link
-                            :href="`/projecten/${selected.id}`"
+                            :href="`/${selected.slug}`"
                             class="bg-primary text-on-primary font-label-md hover:bg-primary-container flex w-full items-center justify-center gap-2 rounded-xl py-3 shadow-md transition-all"
                         >
                             <MaterialIcon name="open_in_new" />
