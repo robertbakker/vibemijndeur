@@ -31,3 +31,5 @@ yarn-error.log
 /.zed
 /public/*.pmtiles
 /.claude
+/resources/js/types/generated.d.ts
+/resources/js/types/typescript-transformer-manifest.json
