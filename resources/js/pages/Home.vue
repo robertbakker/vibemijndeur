@@ -8,19 +8,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
-interface ProjectCard {
-    id: number;
-    title: string;
-    description: string;
-    badge: { label: string; class: string };
-    meta: { icon: string; text: string; class: string }[];
-    authority: string | null;
-    authorityInitials: string;
-    endLabel: string | null;
-}
-
 const props = defineProps<{
-    projects: ProjectCard[];
+    projects: App.Data.RoadworkCard[];
     roadworksTotal: number;
 }>();
 

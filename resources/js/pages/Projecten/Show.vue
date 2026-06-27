@@ -10,21 +10,7 @@ import ProjectMilestones from '@/components/project/ProjectMilestones.vue';
 import ProjectNotify from '@/components/project/ProjectNotify.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
-export interface ProjectDetail {
-    id: number;
-    reference: string;
-    title: string;
-    description: string;
-    statusLabel: string;
-    period: string;
-    endLabel: string | null;
-    authority: string | null;
-    locationLabel: string;
-    latitude: number | null;
-    longitude: number | null;
-}
-
-const props = defineProps<{ project: ProjectDetail }>();
+defineProps<{ project: App.Data.ProjectDetail }>();
 
 defineOptions({ layout: AppLayout });
 </script>
