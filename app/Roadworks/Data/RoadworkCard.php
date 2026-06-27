@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Roadworks\Data;
 
 use App\Models\Roadwork;
+use App\Roadworks\RoadworkTitle;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
 
@@ -37,7 +38,7 @@ class RoadworkCard extends Data
     {
         return new self(
             id: $roadwork->id,
-            title: self::title($roadwork),
+            title: RoadworkTitle::for($roadwork),
             description: self::description($roadwork),
             badge: self::badge($roadwork),
             meta: self::meta($roadwork),
@@ -76,43 +77,13 @@ class RoadworkCard extends Data
         return 'Tot '.CarbonImmutable::parse((string) $roadwork->end_date)->translatedFormat('d M Y');
     }
 
-    private static function title(Roadwork $roadwork): string
-    {
-        $parts = self::descriptionParts($roadwork);
-
-        if ($parts !== []) {
-            return $parts[count($parts) - 1];
-        }
-
-        return trim(($roadwork->road_authority ?? 'Wegwerkzaamheden').' – '.($roadwork->kind ?? ''), ' –');
-    }
-
     private static function description(Roadwork $roadwork): string
     {
-        $parts = self::descriptionParts($roadwork);
+        $parts = RoadworkTitle::parts($roadwork);
 
         return $parts !== []
             ? implode(' · ', $parts)
             : ($roadwork->road_authority ?? 'Geen omschrijving beschikbaar.');
-    }
-
-    /**
-     * Split Melvin's comma-packed `causeDescription` ("Overig, , Kademuur
-     * vervangen") into clean, de-duplicated parts.
-     *
-     * @return list<string>
-     */
-    private static function descriptionParts(Roadwork $roadwork): array
-    {
-        $raw = data_get($roadwork->feature, 'situation.properties.causeDescription');
-
-        if (! is_string($raw) || trim($raw) === '') {
-            return [];
-        }
-
-        $parts = array_filter(array_map('trim', explode(',', $raw)));
-
-        return array_values(array_unique($parts));
     }
 
     /**

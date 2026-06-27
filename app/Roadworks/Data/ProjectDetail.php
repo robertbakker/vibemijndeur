@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Roadworks\Data;
 
 use App\Models\Roadwork;
+use App\Roadworks\RoadworkTitle;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
 
@@ -34,7 +35,7 @@ class ProjectDetail extends Data
         return new self(
             id: $roadwork->id,
             reference: mb_strtoupper($roadwork->source.'-'.$roadwork->source_id),
-            title: self::title($roadwork),
+            title: RoadworkTitle::for($roadwork),
             description: self::description($roadwork),
             statusLabel: self::statusLabel($roadwork),
             period: self::period($roadwork),
@@ -48,34 +49,9 @@ class ProjectDetail extends Data
         );
     }
 
-    /**
-     * @return list<string>
-     */
-    private static function descriptionParts(Roadwork $roadwork): array
-    {
-        $raw = data_get($roadwork->feature, 'situation.properties.causeDescription');
-
-        if (! is_string($raw) || trim($raw) === '') {
-            return [];
-        }
-
-        return array_values(array_unique(array_filter(array_map('trim', explode(',', $raw)))));
-    }
-
-    private static function title(Roadwork $roadwork): string
-    {
-        $parts = self::descriptionParts($roadwork);
-
-        if ($parts !== []) {
-            return $parts[count($parts) - 1];
-        }
-
-        return trim(($roadwork->road_authority ?? 'Wegwerkzaamheden').' – '.($roadwork->kind ?? ''), ' –');
-    }
-
     private static function description(Roadwork $roadwork): string
     {
-        $parts = self::descriptionParts($roadwork);
+        $parts = RoadworkTitle::parts($roadwork);
 
         return $parts !== []
             ? implode(' · ', $parts)
