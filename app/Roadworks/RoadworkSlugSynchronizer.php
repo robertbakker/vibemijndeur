@@ -26,16 +26,18 @@ final class RoadworkSlugSynchronizer
 
         $desired = $this->slugger->unique($this->slugger->base($roadwork), $roadworkId);
 
-        $current = DB::table('roadwork_slugs')
-            ->where('roadwork_id', $roadworkId)
-            ->where('is_current', true)
-            ->first();
-
-        if ($current !== null && $current->slug === $desired) {
-            return;
-        }
-
         DB::transaction(function () use ($roadworkId, $desired): void {
+            DB::table('roadworks')->where('id', $roadworkId)->lockForUpdate()->first();
+
+            $current = DB::table('roadwork_slugs')
+                ->where('roadwork_id', $roadworkId)
+                ->where('is_current', true)
+                ->first();
+
+            if ($current !== null && $current->slug === $desired) {
+                return;
+            }
+
             DB::table('roadwork_slugs')
                 ->where('roadwork_id', $roadworkId)
                 ->where('is_current', true)
