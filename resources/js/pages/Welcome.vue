@@ -4,8 +4,8 @@ import { Head } from '@inertiajs/vue3';
 
 <template>
     <Head title="Welcome">
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+        <link rel="preconnect" href="https://rsms.me/">
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     </Head>
     <div
         class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]"
@@ -21,8 +21,8 @@ import { Head } from '@inertiajs/vue3';
                 >
                     <h1 class="mb-1 font-medium">Let's get started</h1>
                     <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                        Laravel has an incredibly rich ecosystem. <br />We
-                        suggest starting with the following.
+                        Laravel has an incredibly rich ecosystem. <br>We suggest
+                        starting with the following.
                     </p>
                     <ul class="mb-4 flex flex-col lg:mb-6">
                         <li
@@ -48,6 +48,7 @@ import { Head } from '@inertiajs/vue3';
                                 >
                                     <span>Documentation</span>
                                     <svg
+                                        aria-hidden="true"
                                         width="{10}"
                                         height="{11}"
                                         viewBox="0 0 10 11"
@@ -87,6 +88,7 @@ import { Head } from '@inertiajs/vue3';
                                 >
                                     <span>Laracasts</span>
                                     <svg
+                                        aria-hidden="true"
                                         width="{10}"
                                         height="{11}"
                                         viewBox="0 0 10 11"
@@ -121,6 +123,7 @@ import { Head } from '@inertiajs/vue3';
                 >
                     <!-- Laravel Logo -->
                     <svg
+                        aria-hidden="true"
                         class="w-full max-w-none translate-y-0 text-[#F53003] opacity-100 transition-all duration-750 dark:text-[#F61500] starting:opacity-0 motion-safe:starting:translate-y-6"
                         viewBox="0 0 438 104"
                         fill="none"
@@ -158,6 +161,7 @@ import { Head } from '@inertiajs/vue3';
 
                     <!-- 13 -->
                     <svg
+                        aria-hidden="true"
                         class="relative -mt-[6.6rem] -ml-8 w-[438px] max-w-none [--stroke-color:#1B1B18] lg:ml-0 dark:[--stroke-color:#FF750F]"
                         viewBox="0 0 440 392"
                         fill="none"

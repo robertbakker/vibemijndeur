@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
-import maplibregl from 'maplibre-gl';
 import { layers, namedFlavor } from '@protomaps/basemaps';
+import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MaterialIcon from '@/components/MaterialIcon.vue';
 
@@ -16,7 +16,9 @@ const props = defineProps<{
 const mapContainer = useTemplateRef<HTMLDivElement>('mapContainer');
 const map = ref<maplibregl.Map>();
 
-const hasLocation = computed(() => props.latitude !== null && props.longitude !== null);
+const hasLocation = computed(
+    () => props.latitude !== null && props.longitude !== null,
+);
 const coordinates = computed(() =>
     props.latitude !== null && props.longitude !== null
         ? `${props.latitude.toFixed(5)}, ${props.longitude.toFixed(5)}`
@@ -53,20 +55,30 @@ function extendBounds(bounds: maplibregl.LngLatBounds, coords: unknown): void {
         bounds.extend(coords as [number, number]);
         return;
     }
-    coords.forEach((c) => extendBounds(bounds, c));
+    coords.forEach((c) => {
+        extendBounds(bounds, c);
+    });
 }
 
 onMounted(async () => {
-    if (!hasLocation.value) {
+    const lon = props.longitude;
+    const lat = props.latitude;
+    if (
+        !hasLocation.value ||
+        lon === null ||
+        lat === null ||
+        !mapContainer.value
+    ) {
         return;
     }
+    const container = mapContainer.value;
 
-    const center: [number, number] = [props.longitude!, props.latitude!];
+    const center: [number, number] = [lon, lat];
     const protocol = new Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile);
 
     const instance = new maplibregl.Map({
-        container: mapContainer.value!,
+        container,
         center,
         zoom: 14,
         maxBounds: PMTILES_BOUNDS,
@@ -93,7 +105,9 @@ onMounted(async () => {
     map.value = instance;
 
     // Location pin at the representative point.
-    new maplibregl.Marker({ color: '#003082' }).setLngLat(center).addTo(instance);
+    new maplibregl.Marker({ color: '#003082' })
+        .setLngLat(center)
+        .addTo(instance);
 
     instance.on('load', async () => {
         const [arrowImage, crossImage] = await Promise.all([
@@ -103,9 +117,12 @@ onMounted(async () => {
         instance.addImage('detour-marker', arrowImage, { pixelRatio: 2 });
         instance.addImage('restriction-marker', crossImage, { pixelRatio: 2 });
 
-        const response = await fetch(`/api/roadworks/${props.roadworkId}/geometry`, {
-            headers: { Accept: 'application/json' },
-        });
+        const response = await fetch(
+            `/api/roadworks/${props.roadworkId}/geometry`,
+            {
+                headers: { Accept: 'application/json' },
+            },
+        );
         const geometry: GeoJSON.FeatureCollection = await response.json();
 
         instance.addSource('geom', { type: 'geojson', data: geometry });
@@ -118,7 +135,15 @@ onMounted(async () => {
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
                 'line-width': 10,
-                'line-color': ['match', ['get', 'role'], 'restriction', '#861717', 'detour', '#1F449C', '#001a4d'],
+                'line-color': [
+                    'match',
+                    ['get', 'role'],
+                    'restriction',
+                    '#861717',
+                    'detour',
+                    '#1F449C',
+                    '#001a4d',
+                ],
             },
         });
         instance.addLayer({
@@ -129,7 +154,15 @@ onMounted(async () => {
             paint: {
                 'line-width': 5,
                 'line-opacity': 0.9,
-                'line-color': ['match', ['get', 'role'], 'restriction', '#F05039', 'detour', '#1b5dff', '#003082'],
+                'line-color': [
+                    'match',
+                    ['get', 'role'],
+                    'restriction',
+                    '#F05039',
+                    'detour',
+                    '#1b5dff',
+                    '#003082',
+                ],
             },
         });
         instance.addLayer({
@@ -163,9 +196,22 @@ onMounted(async () => {
 
         // Frame the geometry if it covers more than the single point.
         const bounds = new maplibregl.LngLatBounds();
-        geometry.features.forEach((f) => extendBounds(bounds, (f.geometry as GeoJSON.GeometryObject as { coordinates?: unknown }).coordinates));
+        geometry.features.forEach((f) => {
+            extendBounds(
+                bounds,
+                (
+                    f.geometry as GeoJSON.GeometryObject as {
+                        coordinates?: unknown;
+                    }
+                ).coordinates,
+            );
+        });
         if (!bounds.isEmpty()) {
-            instance.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
+            instance.fitBounds(bounds, {
+                padding: 48,
+                maxZoom: 15,
+                duration: 0,
+            });
         }
     });
 });
@@ -193,13 +239,19 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="relative h-64">
-            <div v-if="hasLocation" ref="mapContainer" class="h-full w-full"></div>
+            <div
+                v-if="hasLocation"
+                ref="mapContainer"
+                class="h-full w-full"
+            ></div>
             <div
                 v-else
                 class="bg-surface-container-low text-on-surface-variant flex h-full w-full flex-col items-center justify-center gap-2"
             >
                 <MaterialIcon name="location_off" class="text-2xl" />
-                <span class="font-caption text-caption">Locatie niet beschikbaar</span>
+                <span class="font-caption text-caption"
+                    >Locatie niet beschikbaar</span
+                >
             </div>
         </div>
 

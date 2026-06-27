@@ -3,7 +3,11 @@ import MaterialIcon from '@/components/MaterialIcon.vue';
 
 // Documents are not part of the Melvin feed; static placeholder list.
 const documents = [
-    { icon: 'picture_as_pdf', title: 'Definitief Ontwerp', meta: 'PDF, 14.2 MB' },
+    {
+        icon: 'picture_as_pdf',
+        title: 'Definitief Ontwerp',
+        meta: 'PDF, 14.2 MB',
+    },
     { icon: 'schedule', title: 'Bereikbaarheidsplan', meta: 'PDF, 2.5 MB' },
     { icon: 'eco', title: 'Klimaateffect rapport', meta: 'PDF, 5.1 MB' },
     { icon: 'newspaper', title: 'Laatste Bewonersbrief', meta: 'PDF, 0.8 MB' },
@@ -13,7 +17,9 @@ const documents = [
 <template>
     <section class="bg-surface-container py-stack-xxl">
         <div class="px-margin-desktop mx-auto max-w-7xl">
-            <h2 class="font-headline-lg text-headline-lg text-primary mb-stack-lg">
+            <h2
+                class="font-headline-lg text-headline-lg text-primary mb-stack-lg"
+            >
                 Documenten &amp; Downloads
             </h2>
             <div
@@ -33,7 +39,9 @@ const documents = [
                         <p class="font-label-md text-label-md font-bold">
                             {{ document.title }}
                         </p>
-                        <p class="font-caption text-caption text-on-surface-variant">
+                        <p
+                            class="font-caption text-caption text-on-surface-variant"
+                        >
                             {{ document.meta }}
                         </p>
                     </div>

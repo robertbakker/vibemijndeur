@@ -6,10 +6,14 @@ const portrait =
 
 <template>
     <div class="p-stack-lg border-outline-variant rounded-2xl border bg-white">
-        <h4 class="font-label-md text-label-md text-primary mb-stack-sm font-bold">
+        <h4
+            class="font-label-md text-label-md text-primary mb-stack-sm font-bold"
+        >
             Vragen of feedback?
         </h4>
-        <p class="font-body-md text-body-md text-on-surface-variant mb-stack-md">
+        <p
+            class="font-body-md text-body-md text-on-surface-variant mb-stack-md"
+        >
             Onze omgevingsmanager staat u graag te woord over dit project.
         </p>
         <div class="gap-stack-md flex items-center">
@@ -27,6 +31,7 @@ const portrait =
             </div>
         </div>
         <button
+            type="button"
             class="mt-stack-md border-primary text-primary font-label-md text-label-md hover:bg-primary w-full rounded-lg border py-2 transition-all hover:text-white"
         >
             Stuur bericht

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 withDefaults(
     defineProps<{
@@ -29,23 +29,37 @@ const isActive = computed(() => (href: string): boolean => {
 </script>
 
 <template>
-    <nav class="sticky top-0 z-50 w-full border-b border-outline-variant bg-surface/70 backdrop-blur-lg">
-        <div class="mx-auto flex w-full items-center justify-between px-margin-desktop py-4"
-            :class="fullWidth ? '' : 'max-w-7xl'">
-            <div class="font-headline-md text-headline-md font-extrabold tracking-tight text-primary">
+    <nav
+        class="sticky top-0 z-50 w-full border-b border-outline-variant bg-surface/70 backdrop-blur-lg"
+    >
+        <div
+            class="mx-auto flex w-full items-center justify-between px-margin-desktop py-4"
+            :class="fullWidth ? '' : 'max-w-7xl'"
+        >
+            <div
+                class="font-headline-md text-headline-md font-extrabold tracking-tight text-primary"
+            >
                 voormijndeur
             </div>
 
             <div class="hidden items-center gap-stack-xl md:flex">
-                <Link v-for="link in links" :key="link.label" :href="link.href"
-                    class="cursor-pointer font-body-md text-body-md transition-all duration-200" :class="isActive(link.href)
+                <Link
+                    v-for="link in links"
+                    :key="link.label"
+                    :href="link.href"
+                    class="cursor-pointer font-body-md text-body-md transition-all duration-200"
+                    :class="isActive(link.href)
                         ? 'border-b-2 border-primary pb-1 text-primary'
                         : 'text-on-surface-variant transition-colors hover:text-primary'
-                        ">{{ link.label }}</Link>
+                        "
+                    >{{ link.label }}</Link
+                >
             </div>
 
             <button
-                class="cursor-pointer rounded-full bg-primary px-stack-lg py-2 font-label-md text-label-md text-on-primary transition-all hover:bg-primary-container">
+                type="button"
+                class="cursor-pointer rounded-full bg-primary px-stack-lg py-2 font-label-md text-label-md text-on-primary transition-all hover:bg-primary-container"
+            >
                 Mijn Buurt
             </button>
         </div>

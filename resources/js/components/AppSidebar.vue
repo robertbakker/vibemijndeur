@@ -36,9 +36,9 @@ const filters = [
                 "
             >
                 <MaterialIcon :name="filter.icon" />
-                <span class="font-label-md text-label-md">{{
-                    filter.label
-                }}</span>
+                <span class="font-label-md text-label-md"
+                    >{{ filter.label }}</span
+                >
             </div>
         </nav>
     </aside>

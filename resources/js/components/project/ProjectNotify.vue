@@ -18,8 +18,9 @@ import MaterialIcon from '@/components/MaterialIcon.vue';
                 type="email"
                 placeholder="Uw e-mailadres"
                 class="focus:ring-secondary-container w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white transition-all placeholder:text-white/40 focus:ring-2 focus:outline-none"
-            />
+            >
             <button
+                type="submit"
                 class="bg-secondary-container text-on-secondary-container font-headline-md text-label-md group flex w-full items-center justify-center gap-2 rounded-xl py-4 font-bold shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
                 Houd mij op de hoogte

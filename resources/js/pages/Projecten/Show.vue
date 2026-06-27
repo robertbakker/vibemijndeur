@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
+import ProjectContact from '@/components/project/ProjectContact.vue';
+import ProjectDocuments from '@/components/project/ProjectDocuments.vue';
 import ProjectHero from '@/components/project/ProjectHero.vue';
 import ProjectImpact from '@/components/project/ProjectImpact.vue';
 import ProjectInfo from '@/components/project/ProjectInfo.vue';
 import ProjectMap from '@/components/project/ProjectMap.vue';
 import ProjectMilestones from '@/components/project/ProjectMilestones.vue';
 import ProjectNotify from '@/components/project/ProjectNotify.vue';
-import ProjectContact from '@/components/project/ProjectContact.vue';
-import ProjectDocuments from '@/components/project/ProjectDocuments.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 export interface ProjectDetail {
     id: number;

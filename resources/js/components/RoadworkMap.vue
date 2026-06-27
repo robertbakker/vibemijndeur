@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import maplibregl from 'maplibre-gl';
 import { layers, namedFlavor } from '@protomaps/basemaps';
+import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 export interface RoadworkFeatureProps {
@@ -36,7 +36,10 @@ const hoveredId = ref<number | null>(null);
 
 const SOURCE = 'roadworks';
 const GEOM_SOURCE = 'roadwork-geom';
-const EMPTY_GEOJSON: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const EMPTY_GEOJSON: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: [],
+};
 
 // Extent of the bundled basemap (scripts/basemap-pmtiles.sh): west,south,east,north.
 const PMTILES_BOUNDS: [[number, number], [number, number]] = [
@@ -75,8 +78,12 @@ function filterParams(): URLSearchParams {
     if (props.filters.q) {
         params.set('q', props.filters.q);
     }
-    props.filters.kind.forEach((value) => params.append('kind[]', value));
-    props.filters.status.forEach((value) => params.append('status[]', value));
+    props.filters.kind.forEach((value) => {
+        params.append('kind[]', value);
+    });
+    props.filters.status.forEach((value) => {
+        params.append('status[]', value);
+    });
     return params;
 }
 
@@ -90,7 +97,9 @@ async function apiFetch(params: URLSearchParams): Promise<RoadworksResponse> {
 // Load every roadwork point once (country-wide). Maplibre culls to the viewport,
 // so panning/zooming never refetches the full set — only filter changes do.
 async function loadPoints(): Promise<void> {
-    const source = map.value?.getSource(SOURCE) as maplibregl.GeoJSONSource | undefined;
+    const source = map.value?.getSource(SOURCE) as
+        | maplibregl.GeoJSONSource
+        | undefined;
     if (!source) {
         return;
     }
@@ -108,8 +117,10 @@ const BBOX_MARGIN = 0.35;
 function snappedBbox(b: maplibregl.LngLatBounds): string {
     const padX = (b.getEast() - b.getWest()) * BBOX_MARGIN;
     const padY = (b.getNorth() - b.getSouth()) * BBOX_MARGIN;
-    const down = (v: number) => Math.floor((v - BBOX_GRID) / BBOX_GRID) * BBOX_GRID;
-    const up = (v: number) => Math.ceil((v + BBOX_GRID) / BBOX_GRID) * BBOX_GRID;
+    const down = (v: number) =>
+        Math.floor((v - BBOX_GRID) / BBOX_GRID) * BBOX_GRID;
+    const up = (v: number) =>
+        Math.ceil((v + BBOX_GRID) / BBOX_GRID) * BBOX_GRID;
     return [
         down(b.getWest() - padX),
         down(b.getSouth() - padY),
@@ -124,7 +135,9 @@ let lastViewportKey = '';
 
 // Per-viewport: facet counts + total, plus the line geometry once zoomed in.
 async function updateViewport(): Promise<void> {
-    const geomSource = map.value?.getSource(GEOM_SOURCE) as maplibregl.GeoJSONSource | undefined;
+    const geomSource = map.value?.getSource(GEOM_SOURCE) as
+        | maplibregl.GeoJSONSource
+        | undefined;
     if (!geomSource || !map.value) {
         return;
     }
@@ -146,7 +159,9 @@ async function updateViewport(): Promise<void> {
     }
 
     const data = await apiFetch(params);
-    geomSource.setData(withGeometry ? (data.geometry ?? EMPTY_GEOJSON) : EMPTY_GEOJSON);
+    geomSource.setData(
+        withGeometry ? (data.geometry ?? EMPTY_GEOJSON) : EMPTY_GEOJSON,
+    );
     emit('facets', data.facets);
     emit('total', data.total);
 }
@@ -176,7 +191,11 @@ function applyActiveFilter(): void {
     if (!m?.getLayer('geom-line')) {
         return;
     }
-    const isActive = ['==', ['get', 'roadworkId'], activeRoadworkId()] as maplibregl.FilterSpecification;
+    const isActive = [
+        '==',
+        ['get', 'roadworkId'],
+        activeRoadworkId(),
+    ] as maplibregl.FilterSpecification;
     m.setFilter('geom-outline', isActive);
     m.setFilter('geom-line', isActive);
     m.setFilter('detour-markers', [
@@ -222,11 +241,15 @@ function loadSvgImage(svg: string, size: number): Promise<HTMLImageElement> {
 }
 
 onMounted(() => {
+    if (!mapContainer.value) {
+        return;
+    }
+    const container = mapContainer.value;
     const protocol = new Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile);
 
     const instance = new maplibregl.Map({
-        container: mapContainer.value!,
+        container,
         center: [5.1214, 52.0907], // Utrecht
         zoom: 11,
         maxBounds: PMTILES_BOUNDS,
@@ -259,11 +282,16 @@ onMounted(() => {
             instance.addImage('detour-marker', arrowImage, { pixelRatio: 2 });
         }
         if (!instance.hasImage('restriction-marker')) {
-            instance.addImage('restriction-marker', crossImage, { pixelRatio: 2 });
+            instance.addImage('restriction-marker', crossImage, {
+                pixelRatio: 2,
+            });
         }
 
         instance.addSource(SOURCE, { type: 'geojson', data: EMPTY_GEOJSON });
-        instance.addSource(GEOM_SOURCE, { type: 'geojson', data: EMPTY_GEOJSON });
+        instance.addSource(GEOM_SOURCE, {
+            type: 'geojson',
+            data: EMPTY_GEOJSON,
+        });
 
         // Greyed-out geometry for every roadwork (2024 *-line-disabled).
         instance.addLayer({
@@ -272,7 +300,11 @@ onMounted(() => {
             source: GEOM_SOURCE,
             minzoom: GEOMETRY_MIN_ZOOM,
             layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: { 'line-color': '#a1a1a1', 'line-opacity': 0.3, 'line-width': 8 },
+            paint: {
+                'line-color': '#a1a1a1',
+                'line-opacity': 0.3,
+                'line-width': 8,
+            },
         });
 
         // Darker outline casing for the highlighted roadwork (2024 *-line-outline).
@@ -285,7 +317,15 @@ onMounted(() => {
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
                 'line-width': 10,
-                'line-color': ['match', ['get', 'role'], 'restriction', '#861717', 'detour', '#1F449C', '#001a4d'],
+                'line-color': [
+                    'match',
+                    ['get', 'role'],
+                    'restriction',
+                    '#861717',
+                    'detour',
+                    '#1F449C',
+                    '#001a4d',
+                ],
             },
         });
 
@@ -300,7 +340,15 @@ onMounted(() => {
             paint: {
                 'line-width': 5,
                 'line-opacity': 0.9,
-                'line-color': ['match', ['get', 'role'], 'restriction', '#F05039', 'detour', '#1b5dff', '#003082'],
+                'line-color': [
+                    'match',
+                    ['get', 'role'],
+                    'restriction',
+                    '#F05039',
+                    'detour',
+                    '#1b5dff',
+                    '#003082',
+                ],
             },
         });
 
@@ -310,7 +358,11 @@ onMounted(() => {
             type: 'symbol',
             source: GEOM_SOURCE,
             minzoom: ICON_MIN_ZOOM,
-            filter: ['all', ['==', ['get', 'role'], 'detour'], ['==', ['get', 'roadworkId'], -1]],
+            filter: [
+                'all',
+                ['==', ['get', 'role'], 'detour'],
+                ['==', ['get', 'roadworkId'], -1],
+            ],
             layout: {
                 'symbol-placement': 'line',
                 'symbol-spacing': 50,
@@ -328,7 +380,11 @@ onMounted(() => {
             type: 'symbol',
             source: GEOM_SOURCE,
             minzoom: ICON_MIN_ZOOM,
-            filter: ['all', ['==', ['get', 'role'], 'restriction'], ['==', ['get', 'roadworkId'], -1]],
+            filter: [
+                'all',
+                ['==', ['get', 'role'], 'restriction'],
+                ['==', ['get', 'roadworkId'], -1],
+            ],
             layout: {
                 'symbol-placement': 'line',
                 'symbol-spacing': 70,
@@ -346,8 +402,26 @@ onMounted(() => {
             type: 'circle',
             source: SOURCE,
             paint: {
-                'circle-color': ['match', ['get', 'severity'], 'high', '#ba1a1a', 'medium', '#775a00', '#003082'],
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 3, 12, 6, 15, 9],
+                'circle-color': [
+                    'match',
+                    ['get', 'severity'],
+                    'high',
+                    '#ba1a1a',
+                    'medium',
+                    '#775a00',
+                    '#003082',
+                ],
+                'circle-radius': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    7,
+                    3,
+                    12,
+                    6,
+                    15,
+                    9,
+                ],
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': '#ffffff',
             },
@@ -358,9 +432,15 @@ onMounted(() => {
             if (!feature) {
                 return;
             }
-            emit('select', feature.properties as unknown as RoadworkFeatureProps);
+            emit(
+                'select',
+                feature.properties as unknown as RoadworkFeatureProps,
+            );
             instance.easeTo({
-                center: (feature.geometry as GeoJSON.Point).coordinates as [number, number],
+                center: (feature.geometry as GeoJSON.Point).coordinates as [
+                    number,
+                    number,
+                ],
                 zoom: Math.max(instance.getZoom(), ICON_MIN_ZOOM),
                 padding: { left: 320, right: 384, top: 0, bottom: 0 },
                 duration: 500,
@@ -370,11 +450,15 @@ onMounted(() => {
         // Hovering a point or any geometry line lights up that roadwork.
         const hoverLayers = ['points', 'geom-disabled', 'geom-line'];
         instance.on('mousemove', (event) => {
-            const features = instance.queryRenderedFeatures(event.point, { layers: hoverLayers });
+            const features = instance.queryRenderedFeatures(event.point, {
+                layers: hoverLayers,
+            });
             const feature = features[0];
-            instance.getCanvas().style.cursor = feature?.layer.id === 'points' ? 'pointer' : '';
+            instance.getCanvas().style.cursor =
+                feature?.layer.id === 'points' ? 'pointer' : '';
             const id = feature
-                ? ((feature.properties.roadworkId ?? feature.properties.id) as number)
+                ? ((feature.properties.roadworkId ??
+                      feature.properties.id) as number)
                 : null;
             setHovered(id ?? null);
         });

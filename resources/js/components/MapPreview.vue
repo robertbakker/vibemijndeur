@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
-import maplibregl from 'maplibre-gl';
 import { layers, namedFlavor } from '@protomaps/basemaps';
+import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Link } from '@inertiajs/vue3';
 import MaterialIcon from '@/components/MaterialIcon.vue';
@@ -11,11 +11,15 @@ const mapContainer = useTemplateRef<HTMLDivElement>('mapContainer');
 const map = ref<maplibregl.Map>();
 
 onMounted(() => {
+    if (!mapContainer.value) {
+        return;
+    }
+    const container = mapContainer.value;
     const protocol = new Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile);
 
     map.value = new maplibregl.Map({
-        container: mapContainer.value!,
+        container,
         center: [4.9041, 52.3676], // Amsterdam
         zoom: 11,
         attributionControl: { compact: true },

@@ -33,11 +33,20 @@
         "formatter": { "enabled": true },
         "experimentalFullSupportEnabled": true
     },
+    "css": {
+        "parser": { "tailwindDirectives": true }
+    },
     "linter": {
         "enabled": true,
         "rules": {
             "preset": "recommended",
-            "style": { "useImportType": "error" },
+            "style": {
+                "useImportType": "error",
+                "useVueMultiWordComponentNames": "off"
+            },
+            "a11y": {
+                "useValidAnchor": "off"
+            },
             "nursery": {
                 "useSortedClasses": {
                     "level": "error",
