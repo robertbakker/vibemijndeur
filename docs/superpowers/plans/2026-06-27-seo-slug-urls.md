@@ -750,7 +750,7 @@ git add app/Models/RoadworkSlug.php app/Models/Roadwork.php tests/Feature/Roadwo
 git commit -m "feat: expose current slug on Roadwork + Meili document"
 ```
 
-> **After deploy:** run `php artisan scout:import "App\Models\Roadwork"` so existing Meili documents pick up the new `slug` field (per the project's reindex-after-toSearchableArray-change workflow).
+> **After deploy (ORDER MATTERS):** run `php artisan roadworks:backfill-slugs` FIRST (assigns a current slug to every existing roadwork), THEN `php artisan scout:import "App\Models\Roadwork"` so existing Meili documents pick up the now-populated `slug` field. Reindexing before backfilling indexes `slug => null` for every doc, making Meili-driven links (Home cards, map "Bekijk project") render as `/undefined` until the next reindex.
 
 ---
 
