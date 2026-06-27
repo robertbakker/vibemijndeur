@@ -104,6 +104,8 @@ return [
                     'work_type',
                     'gemeente',
                     'provincie',
+                    'wijk',
+                    'buurt',
                     'hindrance',
                     'activity_type',
                     'published',
