@@ -43,6 +43,22 @@ class RoadworkSearchableTest extends TestCase
         $this->assertTrue($roadwork->shouldBeSearchable());
     }
 
+    public function test_searchable_array_includes_current_slug(): void
+    {
+        $point = ['type' => 'Point', 'coordinates' => [4.3, 52.0]];
+        $doc = ['situation' => ['type' => 'Feature', 'geometry' => $point, 'properties' => ['causeDescription' => 'GAS Hoofdstraat']], 'restrictions' => [], 'detours' => []];
+
+        app(RoadworkUpserter::class)->upsert(
+            'DATEX', 'NDW_SLUG_1',
+            ['kind' => 'WORK', 'road_authority' => "Gemeente 's-Gravenhage", 'published' => true],
+            $point, $doc, CarbonImmutable::parse('2026-06-18T10:00:00Z'),
+        );
+
+        $roadwork = Roadwork::with('currentSlug')->where('source_id', 'NDW_SLUG_1')->firstOrFail();
+
+        $this->assertSame('s-gravenhage-gas-hoofdstraat', $roadwork->toSearchableArray()['slug']);
+    }
+
     public function test_unpublished_roadwork_is_not_searchable(): void
     {
         $point = ['type' => 'Point', 'coordinates' => [5.1, 52.0]];

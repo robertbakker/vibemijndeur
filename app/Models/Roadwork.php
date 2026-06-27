@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Laravel\Scout\Searchable;
 
@@ -55,6 +56,7 @@ class Roadwork extends Model
             'activity_type' => $this->activity_type,
             'published' => (bool) $this->published,
             'road_authority' => $this->road_authority,
+            'slug' => $this->currentSlug?->slug,
             'description' => $this->searchableDescription(),
             // Unix timestamps so Meilisearch can range-filter and sort on them.
             'start_ts' => $this->start_date ? strtotime((string) $this->start_date) : null,
@@ -90,7 +92,12 @@ class Roadwork extends Model
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->withRepresentativePoint();
+        return $query->withRepresentativePoint()->with('currentSlug');
+    }
+
+    public function currentSlug(): HasOne
+    {
+        return $this->hasOne(RoadworkSlug::class)->where('is_current', true);
     }
 
     /**
