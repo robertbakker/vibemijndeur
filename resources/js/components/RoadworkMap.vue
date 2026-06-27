@@ -508,18 +508,20 @@ onMounted(() => {
                     STATUS_DONE,
                     STATUS_ACTIVE,
                 ],
+                // Reaches the design's 38px pin (radius 19) at city zoom, scaling
+                // down when zoomed out so country view doesn't turn to mush.
                 'circle-radius': [
                     'interpolate',
                     ['linear'],
                     ['zoom'],
                     7,
-                    4,
+                    5,
                     12,
-                    7,
+                    13,
                     15,
-                    10,
+                    19,
                 ],
-                'circle-stroke-width': 2.5,
+                'circle-stroke-width': 3,
                 'circle-stroke-color': '#ffffff',
             },
         });
@@ -533,14 +535,16 @@ onMounted(() => {
             minzoom: 11,
             layout: {
                 'icon-image': ['get', 'icon'],
+                // ~15px glyph inside the 38px pin at city zoom. The source image
+                // is added at pixelRatio 2 (18px base), so sizes run ~0.55–0.85.
                 'icon-size': [
                     'interpolate',
                     ['linear'],
                     ['zoom'],
                     11,
-                    0.22,
+                    0.55,
                     15,
-                    0.34,
+                    0.85,
                 ],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
