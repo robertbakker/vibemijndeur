@@ -93,6 +93,15 @@ return [
                 // default of 100 values.
                 'faceting' => [
                     'maxValuesPerFacet' => 400,
+                    // Autosuggest ranks within a facet by popularity, so each
+                    // facet's values come back most-roadworks-first.
+                    'sortFacetValuesBy' => [
+                        'gemeente' => 'count',
+                        'provincie' => 'count',
+                        'wijk' => 'count',
+                        'buurt' => 'count',
+                        'road_authority' => 'count',
+                    ],
                 ],
                 'filterableAttributes' => [
                     '_geo',

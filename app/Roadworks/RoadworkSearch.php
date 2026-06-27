@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Roadworks;
 
 use App\Models\Roadwork;
+use Meilisearch\Contracts\FacetSearchQuery;
 use Meilisearch\Endpoints\Indexes;
+use Meilisearch\Search\FacetSearchResult;
 
 /**
  * Geo + faceted search over the Meilisearch roadworks index.
@@ -138,6 +140,34 @@ class RoadworkSearch
 
             return $index->search($query, $options);
         })->raw();
+    }
+
+    /**
+     * Matching facet values for an autosuggest term, with document counts.
+     * Wraps Meilisearch facet search, which matches the term against the facet
+     * value itself with prefix + typo tolerance (no full-text query, no extra
+     * filter — the index only holds searchable/published documents).
+     *
+     * @return list<array{value: string, count: int}>
+     */
+    public function facetValues(string $facet, string $term, int $limit = 20): array
+    {
+        $result = Roadwork::search('', function (Indexes $index) use ($facet, $term): FacetSearchResult {
+            return $index->facetSearch(
+                (new FacetSearchQuery)
+                    ->setFacetName($facet)
+                    ->setFacetQuery(trim($term)),
+            );
+        })->raw();
+
+        $hits = $result instanceof FacetSearchResult
+            ? $result->getFacetHits()
+            : ($result['facetHits'] ?? []);
+
+        return array_values(array_map(
+            static fn (array $hit): array => ['value' => (string) $hit['value'], 'count' => (int) $hit['count']],
+            array_slice($hits, 0, $limit),
+        ));
     }
 
     /**
