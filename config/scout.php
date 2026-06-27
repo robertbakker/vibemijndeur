@@ -88,6 +88,12 @@ return [
                 'pagination' => [
                     'maxTotalHits' => 30000,
                 ],
+                // The footer counts works for every Dutch gemeente (~340), so the
+                // gemeente facet distribution must not be capped at Meilisearch's
+                // default of 100 values.
+                'faceting' => [
+                    'maxValuesPerFacet' => 400,
+                ],
                 'filterableAttributes' => [
                     '_geo',
                     'source',

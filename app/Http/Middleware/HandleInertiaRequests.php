@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Roadworks\PopularGemeenten;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +44,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // Live roadwork counts for the footer's gemeente cloud (cached).
+            'popularGemeenten' => fn (): array => app(PopularGemeenten::class)->counts(),
         ];
     }
 }

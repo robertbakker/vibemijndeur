@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+type PopularGemeente = { label: string; gemeente: string; count: number };
 
 const currentYear = new Date().getFullYear();
+
+// Live roadwork counts per gemeente, shared from the server on every page.
+const cities = computed<PopularGemeente[]>(
+    () => (usePage().props.popularGemeenten as PopularGemeente[]) ?? [],
+);
+
+const numberFormat = new Intl.NumberFormat('nl-NL');
 
 const columns = [
     {
@@ -44,33 +54,6 @@ const columns = [
             'Vacatures',
         ],
     },
-];
-
-const cities = [
-    'Amsterdam',
-    'Rotterdam',
-    'Den Haag',
-    'Utrecht',
-    'Eindhoven',
-    'Groningen',
-    'Tilburg',
-    'Almere',
-    'Breda',
-    'Nijmegen',
-    'Haarlem',
-    'Arnhem',
-    'Zaanstad',
-    'Amersfoort',
-    'Apeldoorn',
-    'Den Bosch',
-    'Maastricht',
-    'Leiden',
-    'Dordrecht',
-    'Zwolle',
-    'Delft',
-    'Alkmaar',
-    'Deventer',
-    'Leeuwarden',
 ];
 
 const workTypes = [
@@ -172,10 +155,14 @@ const legalLinks = [
                 <div class="flex flex-wrap gap-2">
                     <Link
                         v-for="city in cities"
-                        :key="city"
-                        href="/kaart"
-                        class="rounded-md bg-white/5 px-2.5 py-1.5 text-[12.5px] text-on-primary-container/70 transition-colors hover:bg-white/10 hover:text-secondary-container"
-                        >Werkzaamheden {{ city }}</Link
+                        :key="city.gemeente"
+                        :href="`/werkzaamheden?gemeente[]=${encodeURIComponent(city.gemeente)}`"
+                        class="flex items-center gap-1.5 rounded-md bg-white/5 px-2.5 py-1.5 text-[12.5px] text-on-primary-container/70 transition-colors hover:bg-white/10 hover:text-secondary-container"
+                        >Werkzaamheden {{ city.label }}
+                        <span
+                            class="rounded bg-white/10 px-1.5 text-[11px] tabular-nums text-on-primary-container/60"
+                            >{{ numberFormat.format(city.count) }}</span
+                        ></Link
                     >
                 </div>
             </div>
