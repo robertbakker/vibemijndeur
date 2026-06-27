@@ -6,6 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Data\RoadworkCard;
 use App\Models\Roadwork;
+use App\StructuredData\OrganizationNode;
+use App\StructuredData\StructuredData;
+use App\StructuredData\WebSiteNode;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,7 +18,7 @@ class HomeController extends Controller
     /**
      * Homepage: a snapshot of roadworks currently underway, most severe first.
      */
-    public function __invoke(): Response
+    public function __invoke(StructuredData $structuredData): Response
     {
         $roadworks = Roadwork::query()
             ->whereNotNull('coordinates')
@@ -29,6 +32,9 @@ class HomeController extends Controller
             ->with('currentSlug')
             ->limit(7)
             ->get();
+
+        $structuredData->push(WebSiteNode::make());
+        $structuredData->push(OrganizationNode::make());
 
         return Inertia::render('Home', [
             'projects' => RoadworkCard::collect($roadworks),

@@ -21,5 +21,6 @@
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />
+        {!! app(\App\StructuredData\StructuredData::class)->toScript() !!}
     </body>
 </html>

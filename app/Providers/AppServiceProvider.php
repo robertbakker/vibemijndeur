@@ -11,6 +11,7 @@ use App\Router\Segments\AreaSegment;
 use App\Router\Segments\AuthoritySegment;
 use App\Router\Segments\StatusSegment;
 use App\Router\Segments\TypeSegment;
+use App\StructuredData\StructuredData;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(TypeScriptTransformerApplicationServiceProvider::class)) {
             $this->app->register(TypeScriptTransformerServiceProvider::class);
         }
+
+        $this->app->scoped(StructuredData::class);
 
         $this->registerListingRouter();
     }
