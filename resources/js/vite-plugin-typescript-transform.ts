@@ -15,7 +15,7 @@ export const typescriptTransform = ({
     patterns = ['app/**/Data/**/*.php', 'app/Data/**/*.php'],
     command = 'php artisan typescript:transform',
 }: TypeScriptTransformOptions = {}): Plugin => {
-    patterns = patterns.map((pattern) => pattern.replace('\\', '/'));
+    patterns = patterns.map((pattern) => pattern.replaceAll('\\', '/'));
 
     let config: ResolvedConfig;
 
@@ -24,7 +24,10 @@ export const typescriptTransform = ({
             await execAsync(command);
             config?.logger.info('TypeScript types generated');
         } catch (error) {
-            throw new Error(`Error generating TypeScript types: ${error}`);
+            const stderr = (error as { stderr?: string })?.stderr ?? '';
+            throw new Error(
+                `Error generating TypeScript types: ${error}${stderr ? `\n${stderr}` : ''}`,
+            );
         }
     };
 

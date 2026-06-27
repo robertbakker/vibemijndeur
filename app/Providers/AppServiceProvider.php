@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,13 @@ class AppServiceProvider extends ServiceProvider
             oauth: $app->make(OAuth2Client::class),
             baseUrl: (string) config('services.melvin.base_url'),
         ));
+
+        // The TypeScript transformer is a dev/build-time tool (require-dev), so
+        // only register its provider when the package is actually installed.
+        // This keeps a production `composer install --no-dev` boot safe.
+        if (class_exists(TypeScriptTransformerApplicationServiceProvider::class)) {
+            $this->app->register(TypeScriptTransformerServiceProvider::class);
+        }
     }
 
     /**

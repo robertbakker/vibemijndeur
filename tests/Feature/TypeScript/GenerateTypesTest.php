@@ -24,13 +24,19 @@ class GenerateTypesTest extends TestCase
 
         $contents = (string) file_get_contents($output);
 
-        $this->assertStringContainsString('namespace App', $contents);
-        $this->assertStringContainsString('namespace Data', $contents);
-        $this->assertStringContainsString('ProjectDetail', $contents);
-        $this->assertStringContainsString('RoadworkCard', $contents);
-        // slug field proves the DTO is the source of truth (fixes prior drift):
-        $this->assertStringContainsString('slug', $contents);
-        // precise badge array shape, not a loose `any`/`array`:
-        $this->assertStringContainsString('label', $contents);
+        // ProjectDetail is emitted directly under the App.Data namespace, and
+        // carries `slug` — proving the DTO is the source of truth (fixes the
+        // prior drift where the hand-written interface lacked it).
+        $this->assertMatchesRegularExpression(
+            '/namespace App \{\s*namespace Data \{\s*export type ProjectDetail = \{[^}]*\bslug\b:[^}]*\};/s',
+            $contents,
+        );
+
+        // RoadworkCard emits the precise `badge` object shape (label + class),
+        // not a loose `any`/`array`.
+        $this->assertMatchesRegularExpression(
+            '/export type RoadworkCard = \{.*?badge: \{\s*label: string,\s*class: string,\s*\}/s',
+            $contents,
+        );
     }
 }
