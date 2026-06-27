@@ -40,7 +40,13 @@ class RoadworkSluggerTest extends TestCase
     public function test_unique_appends_counter_only_on_collision(): void
     {
         $other = DB::table('roadworks')->insertGetId(['source' => 'X', 'source_id' => 'OTHER', 'feature' => '{}'], 'id');
-        DB::table('roadwork_slugs')->insert(['roadwork_id' => $other, 'slug' => 'utrecht-n201', 'is_current' => true]);
+        DB::table('slugs')->insert([
+            'slug' => 'utrecht-n201',
+            'sluggable_type' => (new Roadwork)->getMorphClass(),
+            'sluggable_id' => $other,
+            'parent_id' => null,
+            'is_current' => true,
+        ]);
 
         $slugger = app(RoadworkSlugger::class);
         $this->assertSame('utrecht-n201-2', $slugger->unique('utrecht-n201', 999));

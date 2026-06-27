@@ -10,8 +10,8 @@ use Illuminate\Support\Str;
 
 /**
  * Builds the SEO slug `{municipality}-{title}` for a roadwork and guarantees it
- * is unique across {@see roadwork_slugs}. A roadwork keeping one of its own
- * existing slugs is never treated as a collision.
+ * is unique across the unified {@see slugs} table (roadwork rows). A roadwork
+ * keeping one of its own existing slugs is never treated as a collision.
  */
 final class RoadworkSlugger
 {
@@ -42,9 +42,10 @@ final class RoadworkSlugger
 
     private function takenByOther(string $slug, int $roadworkId): bool
     {
-        return DB::table('roadwork_slugs')
+        return DB::table('slugs')
             ->where('slug', $slug)
-            ->where('roadwork_id', '!=', $roadworkId)
+            ->where('sluggable_type', (new Roadwork)->getMorphClass())
+            ->where('sluggable_id', '!=', $roadworkId)
             ->exists();
     }
 }

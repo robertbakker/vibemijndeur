@@ -7,6 +7,7 @@ namespace Tests\Feature\Roadworks;
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -29,11 +30,19 @@ class RoadworkSlugSyncTest extends TestCase
         return Roadwork::where('source_id', 'NDW_SYNC_1')->firstOrFail();
     }
 
+    /** @return Builder roadwork rows in the unified slugs table */
+    private function roadworkSlugs(int $roadworkId): Builder
+    {
+        return DB::table('slugs')
+            ->where('sluggable_type', (new Roadwork)->getMorphClass())
+            ->where('sluggable_id', $roadworkId);
+    }
+
     public function test_upsert_creates_one_current_slug(): void
     {
         $rw = $this->upsert('GAS Hoofdstraat');
 
-        $current = DB::table('roadwork_slugs')->where('roadwork_id', $rw->id)->where('is_current', true)->first();
+        $current = $this->roadworkSlugs($rw->id)->where('is_current', true)->first();
         $this->assertNotNull($current);
         $this->assertSame('s-gravenhage-gas-hoofdstraat', $current->slug);
     }
@@ -43,7 +52,7 @@ class RoadworkSlugSyncTest extends TestCase
         $rw = $this->upsert('GAS Hoofdstraat');
         $this->upsert('Riolering Vervangen'); // same source_id => update, new title
 
-        $rows = DB::table('roadwork_slugs')->where('roadwork_id', $rw->id)->orderBy('id')->get();
+        $rows = $this->roadworkSlugs($rw->id)->orderBy('id')->get();
         $this->assertCount(2, $rows);
         $this->assertSame('s-gravenhage-gas-hoofdstraat', $rows[0]->slug);
         $this->assertFalse((bool) $rows[0]->is_current);
@@ -56,7 +65,7 @@ class RoadworkSlugSyncTest extends TestCase
         $rw = $this->upsert('GAS Hoofdstraat');
         $this->upsert('GAS Hoofdstraat');
 
-        $this->assertSame(1, DB::table('roadwork_slugs')->where('roadwork_id', $rw->id)->count());
+        $this->assertSame(1, $this->roadworkSlugs($rw->id)->count());
     }
 
     public function test_backfill_assigns_slugs_and_is_idempotent(): void
@@ -69,6 +78,8 @@ class RoadworkSlugSyncTest extends TestCase
         $this->artisan('roadworks:backfill-slugs')->assertSuccessful();
         $this->artisan('roadworks:backfill-slugs')->assertSuccessful();
 
-        $this->assertSame(1, DB::table('roadwork_slugs')->where('slug', 'venlo-brug')->where('is_current', true)->count());
+        $this->assertSame(1, DB::table('slugs')
+            ->where('sluggable_type', (new Roadwork)->getMorphClass())
+            ->where('slug', 'venlo-brug')->where('is_current', true)->count());
     }
 }

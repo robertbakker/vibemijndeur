@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\DB;
 use Laravel\Scout\Searchable;
 
@@ -109,9 +109,9 @@ class Roadwork extends Model
         return $query->withRepresentativePoint()->withAdministrativeAreas()->with('currentSlug');
     }
 
-    public function currentSlug(): HasOne
+    public function currentSlug(): MorphOne
     {
-        return $this->hasOne(RoadworkSlug::class)->where('is_current', true);
+        return $this->morphOne(Slug::class, 'sluggable')->where('is_current', true);
     }
 
     /**

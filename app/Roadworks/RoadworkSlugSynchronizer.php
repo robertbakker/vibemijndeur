@@ -24,13 +24,15 @@ final class RoadworkSlugSynchronizer
             return;
         }
 
+        $morph = (new Roadwork)->getMorphClass();
         $desired = $this->slugger->unique($this->slugger->base($roadwork), $roadworkId);
 
-        DB::transaction(function () use ($roadworkId, $desired): void {
+        DB::transaction(function () use ($roadworkId, $morph, $desired): void {
             DB::table('roadworks')->where('id', $roadworkId)->lockForUpdate()->first();
 
-            $current = DB::table('roadwork_slugs')
-                ->where('roadwork_id', $roadworkId)
+            $current = DB::table('slugs')
+                ->where('sluggable_type', $morph)
+                ->where('sluggable_id', $roadworkId)
                 ->where('is_current', true)
                 ->first();
 
@@ -38,22 +40,26 @@ final class RoadworkSlugSynchronizer
                 return;
             }
 
-            DB::table('roadwork_slugs')
-                ->where('roadwork_id', $roadworkId)
+            DB::table('slugs')
+                ->where('sluggable_type', $morph)
+                ->where('sluggable_id', $roadworkId)
                 ->where('is_current', true)
                 ->update(['is_current' => false]);
 
-            $existing = DB::table('roadwork_slugs')
-                ->where('roadwork_id', $roadworkId)
+            $existing = DB::table('slugs')
+                ->where('sluggable_type', $morph)
+                ->where('sluggable_id', $roadworkId)
                 ->where('slug', $desired)
                 ->first();
 
             if ($existing !== null) {
-                DB::table('roadwork_slugs')->where('id', $existing->id)->update(['is_current' => true]);
+                DB::table('slugs')->where('id', $existing->id)->update(['is_current' => true]);
             } else {
-                DB::table('roadwork_slugs')->insert([
-                    'roadwork_id' => $roadworkId,
+                DB::table('slugs')->insert([
                     'slug' => $desired,
+                    'sluggable_type' => $morph,
+                    'sluggable_id' => $roadworkId,
+                    'parent_id' => null,
                     'is_current' => true,
                 ]);
             }
