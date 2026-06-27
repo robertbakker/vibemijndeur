@@ -62,6 +62,10 @@ class SuggestionServiceTest extends TestCase
         $this->assertNotNull($gemeenteHit);
         $this->assertSame('Amsterdam', $gemeenteHit->label);
         $this->assertSame('/amsterdam', $gemeenteHit->url);
+        $this->assertNull(
+            collect($suggestions)->firstWhere('type', 'buurt'),
+            'slug-less buurt should be skipped, not surfaced',
+        );
     }
 
     public function test_ambiguous_name_yields_one_suggestion_per_area(): void

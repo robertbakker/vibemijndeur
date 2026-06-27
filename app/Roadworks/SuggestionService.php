@@ -98,7 +98,12 @@ final class SuggestionService
             try {
                 $suggestions[] = new Suggestion($facet, $value, $this->mapper->build($query), $count);
             } catch (ModelNotFoundException) {
-                // Area exists in the index but has no slug yet; skip it.
+                // Area exists in the index but has no current slug; skip it (cannot build a URL).
+                Log::warning('autosuggest: area has no current slug', [
+                    'facet' => $facet,
+                    'area_id' => $area->getKey(),
+                    'name' => $value,
+                ]);
             }
         }
 
