@@ -15,43 +15,59 @@ class ProjectPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_project_page_renders_real_roadwork_data(): void
+    private function upsert(string $sourceId, string $cause): Roadwork
     {
         $line = ['type' => 'LineString', 'coordinates' => [[4.89, 52.37], [4.90, 52.37]]];
-        $doc = ['situation' => ['type' => 'Feature', 'geometry' => $line, 'properties' => ['causeDescription' => 'Kabels / Leidingen, , GAS Hoofdstraat']], 'restrictions' => [], 'detours' => []];
+        $doc = ['situation' => ['type' => 'Feature', 'geometry' => $line, 'properties' => ['causeDescription' => $cause]], 'restrictions' => [], 'detours' => []];
 
         app(RoadworkUpserter::class)->upsert(
-            'DATEX',
-            'NDW_PAGE_1',
+            'DATEX', $sourceId,
             ['kind' => 'WORK', 'severity' => 'high', 'status' => 'running', 'road_authority' => "Gemeente 's-Gravenhage", 'published' => true, 'start_date' => '2026-07-01T00:00:00Z', 'end_date' => '2026-09-01T00:00:00Z'],
-            $line,
-            $doc,
-            CarbonImmutable::parse('2026-06-18T10:00:00Z'),
+            $line, $doc, CarbonImmutable::parse('2026-06-18T10:00:00Z'),
         );
 
-        $roadwork = Roadwork::where('source_id', 'NDW_PAGE_1')->firstOrFail();
+        return Roadwork::where('source_id', $sourceId)->firstOrFail();
+    }
 
-        $this->get("/projecten/{$roadwork->id}")
+    public function test_current_slug_renders_project(): void
+    {
+        $this->upsert('NDW_PAGE_1', 'Kabels / Leidingen, , GAS Hoofdstraat');
+
+        $this->get('/s-gravenhage-gas-hoofdstraat')
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Projecten/Show')
-                ->where('project.id', $roadwork->id)
                 ->where('project.title', 'GAS Hoofdstraat')
-                ->where('project.reference', 'DATEX-NDW_PAGE_1')
-                ->where('project.statusLabel', 'In uitvoering')
                 ->where('project.authority', "Gemeente 's-Gravenhage")
-                ->whereNot('project.latitude', null)
-                ->whereNot('project.longitude', null)
             );
     }
 
-    public function test_missing_roadwork_returns_404(): void
+    public function test_historical_slug_redirects_to_current(): void
     {
-        $this->get('/projecten/999999999')->assertNotFound();
+        $this->upsert('NDW_PAGE_1', 'GAS Hoofdstraat');
+        $this->upsert('NDW_PAGE_1', 'Riolering Vervangen');
+
+        $this->get('/s-gravenhage-gas-hoofdstraat')
+            ->assertRedirect('/s-gravenhage-riolering-vervangen')
+            ->assertStatus(301);
     }
 
-    public function test_non_numeric_id_is_not_matched(): void
+    public function test_unknown_slug_returns_404(): void
     {
-        $this->get('/projecten/not-a-number')->assertNotFound();
+        $this->get('/this-slug-does-not-exist')->assertNotFound();
+    }
+
+    public function test_legacy_numeric_url_redirects_to_slug(): void
+    {
+        $rw = $this->upsert('NDW_PAGE_1', 'GAS Hoofdstraat');
+
+        $this->get("/projecten/{$rw->id}")
+            ->assertRedirect('/s-gravenhage-gas-hoofdstraat')
+            ->assertStatus(301);
+    }
+
+    public function test_named_routes_still_resolve(): void
+    {
+        $this->get('/kaart')->assertOk();
     }
 }

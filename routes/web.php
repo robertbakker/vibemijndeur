@@ -16,9 +16,9 @@ Route::get('/api/roadworks/{id}/geometry', RoadworkGeometryController::class)
     ->whereNumber('id')
     ->name('api.roadworks.geometry');
 
-Route::get('/projecten/{id}', [ProjectController::class, 'show'])
+Route::get('/projecten/{id}', [ProjectController::class, 'redirectFromId'])
     ->whereNumber('id')
-    ->name('projecten.show');
+    ->name('projecten.legacy');
 
 /*
  * Serve the basemap PMTiles through Laravel so HTTP Range requests work.
@@ -28,3 +28,8 @@ Route::get('/projecten/{id}', [ProjectController::class, 'show'])
 Route::get('/tiles/basemap-nl.pmtiles', fn () => response()
     ->file(public_path('basemap-nl.pmtiles'), ['Content-Type' => 'application/octet-stream']))
     ->name('tiles.basemap');
+
+// Single-segment SEO detail pages. MUST stay last so named routes win.
+Route::get('/{slug}', [ProjectController::class, 'showBySlug'])
+    ->where('slug', '[a-z0-9-]+')
+    ->name('projecten.show');
