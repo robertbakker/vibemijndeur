@@ -58,5 +58,11 @@
     "assist": {
         "enabled": true,
         "actions": { "source": { "organizeImports": "on" } }
-    }
+    },
+    "overrides": [
+        {
+            "includes": ["resources/js/types/generated.d.ts"],
+            "linter": { "enabled": false }
+        }
+    ]
 }
