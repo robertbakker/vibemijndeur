@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\ProjectDetail;
 use App\Models\Roadwork;
 use App\Models\RoadworkSlug;
-use App\Roadworks\Data\ProjectDetail;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;

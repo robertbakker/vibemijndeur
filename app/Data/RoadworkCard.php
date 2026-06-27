@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Roadworks\Data;
+namespace App\Data;
 
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkTitle;
@@ -19,15 +19,13 @@ use Spatie\LaravelData\Data;
  */
 class RoadworkCard extends Data
 {
-    /**
-     * @param  Badge  $badge
-     * @param  list<MetaItem>  $meta
-     */
     public function __construct(
         public int $id,
         public string $title,
         public string $description,
+        /** @var array{label: string, class: string} */
         public array $badge,
+        /** @var list<array{icon: string, text: string, class: string}> */
         public array $meta,
         public ?string $authority,
         public string $authorityInitials,

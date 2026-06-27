@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\RoadworkCard;
 use App\Models\Roadwork;
-use App\Roadworks\Data\RoadworkCard;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;

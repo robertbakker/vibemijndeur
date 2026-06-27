@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Roadworks\Data;
+namespace App\Data;
 
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkTitle;
