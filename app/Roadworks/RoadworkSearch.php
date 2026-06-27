@@ -111,6 +111,36 @@ final class RoadworkSearch
     }
 
     /**
+     * Paged, sorted, faceted listing search (no geo). Returns only hit ids
+     * (the caller hydrates models) plus `facetDistribution` and
+     * `estimatedTotalHits`. A zero `$limit` yields a counts-only response.
+     *
+     * @param  array<string, string|int|bool|list<string|int>>  $filters
+     * @param  list<string>  $sort  e.g. ['start_ts:asc']
+     * @param  list<string>  $facets
+     * @return array<string, mixed>
+     */
+    public function browse(string $query, array $filters = [], array $sort = [], int $offset = 0, int $limit = 24, array $facets = []): array
+    {
+        $filter = $this->scalarFilters($filters);
+
+        return Roadwork::search($query, function (Indexes $index, string $query, array $options) use ($filter, $sort, $offset, $limit, $facets) {
+            if ($filter !== []) {
+                $options['filter'] = $filter;
+            }
+            if ($sort !== []) {
+                $options['sort'] = $sort;
+            }
+            $options['facets'] = $facets;
+            $options['offset'] = $offset;
+            $options['limit'] = $limit;
+            $options['attributesToRetrieve'] = ['id'];
+
+            return $index->search($query, $options);
+        })->raw();
+    }
+
+    /**
      * Turn `['status' => 'active', 'kind' => ['repair', 'event']]` into
      * Meilisearch filter expressions (`status = "active"`, `kind IN ["repair","event"]`).
      *

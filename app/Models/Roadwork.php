@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Data\RoadworkStatus;
 use App\Roadworks\Data\RoadworkDocument;
 use App\Roadworks\RoadworkGeometry;
+use App\Roadworks\RoadworkType;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,6 +48,8 @@ class Roadwork extends Model
     {
         [$latitude, $longitude] = $this->representativePoint();
 
+        $status = RoadworkStatus::for($this);
+
         $document = [
             'id' => $this->id,
             'source' => $this->source,
@@ -58,6 +62,11 @@ class Roadwork extends Model
             'road_authority' => $this->road_authority,
             'slug' => $this->currentSlug?->slug,
             'description' => $this->searchableDescription(),
+            // Derived facets for the listing page: the lifecycle bucket
+            // (active/planned/done), an int for ordering, and the work "soort".
+            'status_key' => $status->value,
+            'status_order' => $status->order(),
+            'work_type' => RoadworkType::for($this)['label'],
             // Unix timestamps so Meilisearch can range-filter and sort on them.
             'start_ts' => $this->start_date ? strtotime((string) $this->start_date) : null,
             'end_ts' => $this->end_date ? strtotime((string) $this->end_date) : null,

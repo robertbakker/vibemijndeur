@@ -62,6 +62,19 @@ enum RoadworkStatus: string
     }
 
     /**
+     * Sort weight for the listing's "op status" ordering (in uitvoering first,
+     * afgerond last) — alphabetical on the enum value wouldn't give this.
+     */
+    public function order(): int
+    {
+        return match ($this) {
+            self::Active => 0,
+            self::Planned => 1,
+            self::Done => 2,
+        };
+    }
+
+    /**
      * @return StatusPalette
      */
     public function palette(): array

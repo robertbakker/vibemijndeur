@@ -14,7 +14,7 @@ withDefaults(
 const links = [
     { label: 'Home', href: '/' },
     { label: 'Kaart', href: '/kaart' },
-    { label: 'Over werkzaamheden', href: '#' },
+    { label: 'Overzicht', href: '/werkzaamheden' },
 ];
 
 const page = usePage();

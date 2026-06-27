@@ -94,6 +94,8 @@ return [
                     'kind',
                     'severity',
                     'status',
+                    'status_key',
+                    'work_type',
                     'hindrance',
                     'activity_type',
                     'published',
@@ -103,6 +105,7 @@ return [
                 ],
                 'sortableAttributes' => [
                     '_geo',
+                    'status_order',
                     'start_ts',
                     'end_ts',
                     'last_seen_ts',

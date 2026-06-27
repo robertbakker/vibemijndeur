@@ -4,11 +4,14 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RoadworkGeometryController;
 use App\Http\Controllers\RoadworkSearchController;
+use App\Http\Controllers\WerkzaamhedenController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::inertia('/kaart', 'Kaart')->name('kaart');
+
+Route::get('/werkzaamheden', WerkzaamhedenController::class)->name('werkzaamheden.index');
 
 Route::get('/api/roadworks', RoadworkSearchController::class)->name('api.roadworks');
 
