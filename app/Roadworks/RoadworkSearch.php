@@ -120,11 +120,12 @@ class RoadworkSearch
      * @param  array<string, string|int|bool|list<string|int>>  $filters
      * @param  list<string>  $sort  e.g. ['start_ts:asc']
      * @param  list<string>  $facets
+     * @param  array<string, list<string>>  $areaFilters  OR'd together as one group
      * @return array<string, mixed>
      */
-    public function browse(string $query, array $filters = [], array $sort = [], int $offset = 0, int $limit = 24, array $facets = []): array
+    public function browse(string $query, array $filters = [], array $sort = [], int $offset = 0, int $limit = 24, array $facets = [], array $areaFilters = []): array
     {
-        $filter = $this->scalarFilters($filters);
+        $filter = $this->buildFilter($filters, $areaFilters);
 
         return Roadwork::search($query, function (Indexes $index, string $query, array $options) use ($filter, $sort, $offset, $limit, $facets) {
             if ($filter !== []) {
@@ -177,6 +178,28 @@ class RoadworkSearch
      * @param  array<string, string|int|bool|list<string|int>>  $filters
      * @return list<string>
      */
+    /**
+     * Combine AND'd dimension filters with a single OR'd area group. A nested
+     * array in a Meilisearch filter list is interpreted as OR.
+     *
+     * @param  array<string, string|int|bool|list<string|int>>  $filters
+     * @param  array<string, list<string>>  $areaFilters
+     * @return list<string|list<string>>
+     */
+    protected function buildFilter(array $filters, array $areaFilters): array
+    {
+        $filter = $this->scalarFilters($filters);
+
+        $areaGroup = $this->scalarFilters($areaFilters);
+        if (count($areaGroup) === 1) {
+            $filter[] = $areaGroup[0];
+        } elseif (count($areaGroup) > 1) {
+            $filter[] = $areaGroup; // nested array = OR in Meilisearch
+        }
+
+        return $filter;
+    }
+
     private function scalarFilters(array $filters): array
     {
         $expressions = [];
