@@ -18,12 +18,18 @@ final class StatusSegment implements UrlSegment
             return 0;
         }
 
-        $status = RoadworkStatus::fromSlug($segment);
-        if ($status === null) {
-            return 0;
+        $statuses = [];
+        foreach (explode(',', $segment) as $value) {
+            $status = RoadworkStatus::fromSlug($value);
+            if ($status === null) {
+                return 0; // whole segment belongs to another handler
+            }
+            $statuses[] = $status;
         }
 
-        $query->addStatus($status->value);
+        foreach ($statuses as $status) {
+            $query->addStatus($status->value);
+        }
         $cursor->consume(1);
 
         return 1;
@@ -31,8 +37,15 @@ final class StatusSegment implements UrlSegment
 
     public function build(ListingQuery $query): ?string
     {
-        $first = $query->statuses()[0] ?? null;
+        $slugs = array_map(
+            fn (string $value): string => RoadworkStatus::from($value)->slug(),
+            $query->statuses(),
+        );
+        if ($slugs === []) {
+            return null;
+        }
+        sort($slugs);
 
-        return $first === null ? null : RoadworkStatus::from($first)->slug();
+        return implode(',', $slugs);
     }
 }

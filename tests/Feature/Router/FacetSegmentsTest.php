@@ -29,6 +29,28 @@ class FacetSegmentsTest extends TestCase
         $this->assertSame(0, (new StatusSegment)->match($cursor, new ListingQuery));
     }
 
+    public function test_status_segment_parses_and_builds_comma_list(): void
+    {
+        $query = new ListingQuery;
+        $cursor = new SegmentCursor(['afgerond,gepland']);
+        $segment = new StatusSegment;
+
+        $this->assertSame(1, $segment->match($cursor, $query));
+        $this->assertSame(['done', 'planned'], $query->statuses());
+        // build is sorted by slug: afgerond < gepland
+        $this->assertSame('afgerond,gepland', $segment->build($query));
+    }
+
+    public function test_status_segment_rejects_segment_with_unknown_value(): void
+    {
+        $query = new ListingQuery;
+        $cursor = new SegmentCursor(['gepland,zwembad']);
+        $segment = new StatusSegment;
+
+        $this->assertSame(0, $segment->match($cursor, $query));
+        $this->assertSame([], $query->statuses());
+    }
+
     public function test_type_segment_round_trips(): void
     {
         $cursor = new SegmentCursor(['wegdek']);
