@@ -20,12 +20,19 @@ final class AuthoritySegment implements UrlSegment
             return 0;
         }
 
-        $name = $this->slugToName()[$segment] ?? null;
-        if ($name === null) {
-            return 0;
+        $map = $this->slugToName();
+        $resolved = [];
+        foreach (explode(',', $segment) as $value) {
+            $name = $map[$value] ?? null;
+            if ($name === null) {
+                return 0;
+            }
+            $resolved[] = $name;
         }
 
-        $query->addAuthority($name);
+        foreach ($resolved as $name) {
+            $query->addAuthority($name);
+        }
         $cursor->consume(1);
 
         return 1;
@@ -33,9 +40,13 @@ final class AuthoritySegment implements UrlSegment
 
     public function build(ListingQuery $query): ?string
     {
-        $first = $query->authorities()[0] ?? null;
+        $slugs = array_map(fn (string $name): string => Str::slug($name), $query->authorities());
+        if ($slugs === []) {
+            return null;
+        }
+        sort($slugs);
 
-        return $first === null ? null : Str::slug($first);
+        return implode(',', $slugs);
     }
 
     /**

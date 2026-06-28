@@ -6,8 +6,10 @@ namespace Tests\Feature\Router;
 
 use App\Router\ListingQuery;
 use App\Router\SegmentCursor;
+use App\Router\Segments\AuthoritySegment;
 use App\Router\Segments\StatusSegment;
 use App\Router\Segments\TypeSegment;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class FacetSegmentsTest extends TestCase
@@ -72,5 +74,21 @@ class FacetSegmentsTest extends TestCase
         $this->assertSame(['Wegdek', 'Riool'], $query->types());
         // sorted by slug: riool < wegdek
         $this->assertSame('riool,wegdek', $segment->build($query));
+    }
+
+    public function test_authority_segment_parses_and_builds_comma_list(): void
+    {
+        Cache::put('router:authorities', [
+            'gemeente-amsterdam' => 'Gemeente Amsterdam',
+            'rijkswaterstaat' => 'Rijkswaterstaat',
+        ]);
+
+        $query = new ListingQuery;
+        $cursor = new SegmentCursor(['rijkswaterstaat,gemeente-amsterdam']);
+        $segment = app(AuthoritySegment::class);
+
+        $this->assertSame(1, $segment->match($cursor, $query));
+        $this->assertSame(['Rijkswaterstaat', 'Gemeente Amsterdam'], $query->authorities());
+        $this->assertSame('gemeente-amsterdam,rijkswaterstaat', $segment->build($query));
     }
 }
