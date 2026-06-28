@@ -19,22 +19,38 @@ final class TypeSegment implements UrlSegment
             return 0;
         }
 
-        foreach (RoadworkType::labels() as $label) {
-            if (Str::slug($label) === $segment) {
-                $query->addType($label);
-                $cursor->consume(1);
-
-                return 1;
+        $labels = RoadworkType::labels();
+        $resolved = [];
+        foreach (explode(',', $segment) as $value) {
+            $label = null;
+            foreach ($labels as $candidate) {
+                if (Str::slug($candidate) === $value) {
+                    $label = $candidate;
+                    break;
+                }
             }
+            if ($label === null) {
+                return 0;
+            }
+            $resolved[] = $label;
         }
 
-        return 0;
+        foreach ($resolved as $label) {
+            $query->addType($label);
+        }
+        $cursor->consume(1);
+
+        return 1;
     }
 
     public function build(ListingQuery $query): ?string
     {
-        $first = $query->types()[0] ?? null;
+        $slugs = array_map(fn (string $label): string => Str::slug($label), $query->types());
+        if ($slugs === []) {
+            return null;
+        }
+        sort($slugs);
 
-        return $first === null ? null : Str::slug($first);
+        return implode(',', $slugs);
     }
 }

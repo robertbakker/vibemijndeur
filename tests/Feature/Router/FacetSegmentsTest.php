@@ -61,4 +61,16 @@ class FacetSegmentsTest extends TestCase
         $this->assertSame(['Wegdek'], $query->types());
         $this->assertSame('wegdek', $segment->build($query));
     }
+
+    public function test_type_segment_parses_and_builds_comma_list(): void
+    {
+        $query = new ListingQuery;
+        $cursor = new SegmentCursor(['wegdek,riool']);
+        $segment = new TypeSegment;
+
+        $this->assertSame(1, $segment->match($cursor, $query));
+        $this->assertSame(['Wegdek', 'Riool'], $query->types());
+        // sorted by slug: riool < wegdek
+        $this->assertSame('riool,wegdek', $segment->build($query));
+    }
 }
