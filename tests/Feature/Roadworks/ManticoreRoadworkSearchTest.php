@@ -77,7 +77,7 @@ class ManticoreRoadworkSearchTest extends TestCase
         $this->assertSame(2, $result['estimatedTotalHits']);
         $this->assertEqualsCanonicalizing([1, 2], array_column($result['hits'], 'id'));
         $this->assertSame(['published' => 1, 'running' => 1], $this->sortedByKey($result['facetDistribution']['status']));
-        // Geo is rebuilt to the Meili `_geo` shape with float precision intact.
+        // Geo is rebuilt to the `_geo` shape with float precision intact.
         $hit = collect($result['hits'])->firstWhere('id', 1);
         $this->assertEqualsWithDelta(52.0907, $hit['_geo']['lat'], 0.001);
         $this->assertEqualsWithDelta(5.1214, $hit['_geo']['lng'], 0.001);

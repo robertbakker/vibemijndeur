@@ -13,7 +13,7 @@ class FooterGemeentenTest extends TestCase
 {
     public function test_pages_share_popular_gemeenten_counts_with_the_footer(): void
     {
-        // Seed the cache so the shared prop resolves without hitting Meilisearch.
+        // Seed the cache so the shared prop resolves without hitting the search backend.
         Cache::put('footer:popular-gemeenten', PopularGemeenten::merge([
             'Amsterdam' => 125,
             "'s-Gravenhage" => 186,

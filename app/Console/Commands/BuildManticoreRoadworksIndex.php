@@ -12,11 +12,10 @@ use Laravel\Scout\EngineManager;
 use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 
 /**
- * (Re)build the Manticore `roadworks` table from Postgres, independent of Scout
- * (Meili stays the Scout driver). Drops and recreates the table from
+ * (Re)build the Manticore `roadworks` table from Postgres directly, not through
+ * Scout. Drops and recreates the table from
  * {@see Roadwork::scoutIndexMigration()}, then bulk-replaces every searchable
- * roadwork using {@see Roadwork::toManticoreDocument()} — the same data Meili
- * indexes, so the two engines can be compared like for like.
+ * roadwork using {@see Roadwork::toManticoreDocument()}.
  */
 #[Description('Build the Manticore roadworks index from the database')]
 #[Signature('manticore:build-roadworks {--chunk=500 : Rows loaded per batch}')]

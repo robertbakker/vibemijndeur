@@ -9,7 +9,7 @@ use App\Roadworks\Data\RoadworkDocument;
 /**
  * Builds GeoJSON features (situation + restrictions + detours) from a
  * {@see RoadworkDocument}. The geometries are already GeoJSON in the `feature`
- * jsonb; Meilisearch only holds the centroid point, so anything that needs the
+ * jsonb; the Manticore index only holds the centroid point, so anything that needs the
  * real lines/polygons reads them through here.
  */
 final class RoadworkGeometry

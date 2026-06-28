@@ -153,7 +153,7 @@ final class ListingQuery
     }
 
     /**
-     * Non-area filters keyed by Meilisearch attribute (AND-combined upstream).
+     * Non-area filters keyed by index attribute (AND-combined upstream).
      *
      * @return array<string, list<string>>
      */
@@ -175,7 +175,7 @@ final class ListingQuery
     }
 
     /**
-     * Area names grouped by their filterable Meilisearch attribute. Only
+     * Area names grouped by their filterable index attribute. Only
      * gemeente/provincie are indexed as facets; other levels are dropped.
      *
      * @return array<string, list<string>>

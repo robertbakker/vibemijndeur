@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Cache;
 /**
  * Live roadwork counts for the footer's "Werkzaamheden per gemeente" cloud:
  * the 24 biggest Dutch municipalities, each with the number of roadworks
- * currently in the Meilisearch index.
+ * currently in the search index.
  *
  * Counts come from a single `gemeente` facet distribution (one search with
- * `limit: 0`), cached so the shared footer prop costs at most one Meilisearch
+ * `limit: 0`), cached so the shared footer prop costs at most one search
  * call per hour rather than one per request.
  */
 final readonly class PopularGemeenten

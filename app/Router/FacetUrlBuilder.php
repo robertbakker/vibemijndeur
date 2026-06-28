@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Turns Meilisearch facet rows into {@see FacetOption} DTOs, each carrying the
+ * Turns search-engine facet rows into {@see FacetOption} DTOs, each carrying the
  * clean URL you land on after toggling that one value against the current query.
  */
 final readonly class FacetUrlBuilder

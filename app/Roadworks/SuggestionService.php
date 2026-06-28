@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Builds ranked autosuggest results from Meilisearch facet search: each matched
+ * Builds ranked autosuggest results from the search engine's facet search: each matched
  * facet value becomes one or more {@see Suggestion}s linking to a pretty
  * listing URL (built via {@see ListingUrlMapper}).
  */

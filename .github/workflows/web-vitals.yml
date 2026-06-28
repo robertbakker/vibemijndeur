@@ -1,0 +1,138 @@
+name: web-vitals
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Daily trend snapshot at 04:00 UTC.
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+
+    # Laravel reads these via env() — Dotenv does not overwrite real env vars,
+    # so they take precedence over the values in .env.
+    env:
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      APP_URL: http://127.0.0.1:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: voormijndeur
+      DB_USERNAME: sail
+      DB_PASSWORD: password
+      QUEUE_CONNECTION: sync
+      SCOUT_DRIVER: manticore
+      MANTICORE_ENGINE: mysql-builder
+      MANTICORE_MYSQL_HOST: 127.0.0.1
+      MANTICORE_MYSQL_PORT: '9306'
+
+    services:
+      pgsql:
+        image: imresamu/postgis:18-3.6
+        env:
+          POSTGRES_USER: sail
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: voormijndeur
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sail -d voormijndeur"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      manticore:
+        image: manticoresearch/manticore:latest
+        ports:
+          - 9306:9306
+          - 9308:9308
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: '22'
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Build assets (production)
+        run: npm run build
+
+      - name: Wait for Manticore
+        run: |
+          for i in $(seq 1 30); do
+            if (echo > /dev/tcp/127.0.0.1/9306) >/dev/null 2>&1; then
+              echo "Manticore is up"; exit 0
+            fi
+            echo "Waiting for Manticore... ($i)"; sleep 2
+          done
+          echo "Manticore did not become ready"; exit 1
+
+      - name: Migrate database
+        run: php artisan migrate --force
+
+      - name: Seed roadworks
+        run: php artisan db:seed --force
+
+      # Insurance: the seeder links areas via the queued RoadworkSaved listener
+      # (runs inline under QUEUE_CONNECTION=sync), but this guarantees links
+      # regardless of queue config. Idempotent.
+      - name: Link roadworks to areas
+        run: php artisan roadworks:link-areas
+
+      - name: Build Manticore index
+        run: php artisan manticore:build-roadworks
+
+      - name: Serve application
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000 >/dev/null; then
+              echo "App is up"; exit 0
+            fi
+            echo "Waiting for app... ($i)"; sleep 2
+          done
+          echo "App did not become ready"; exit 1
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
+        with:
+          urls: |
+            http://127.0.0.1:8000/
+            http://127.0.0.1:8000/werkzaamheden
+            http://127.0.0.1:8000/projecten/1
+          configPath: ./.github/lighthouse/lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true

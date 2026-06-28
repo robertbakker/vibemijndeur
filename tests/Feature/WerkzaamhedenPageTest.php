@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use App\Models\Gemeente;
 use App\Models\Provincie;
 use App\Models\Slug;
-use App\Roadworks\RoadworkSearch;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -31,7 +31,7 @@ class WerkzaamhedenPageTest extends TestCase
     {
         $this->seedAmsterdam();
 
-        $this->mock(RoadworkSearch::class, function ($mock): void {
+        $this->mock(RoadworkSearchEngine::class, function ($mock): void {
             $mock->shouldReceive('browse')->andReturn([
                 'estimatedTotalHits' => 0,
                 'hits' => [],

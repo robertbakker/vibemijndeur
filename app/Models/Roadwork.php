@@ -86,11 +86,12 @@ class Roadwork extends Model
     use Searchable;
 
     /**
-     * The Meilisearch document. The geometry (Point/LineString/Polygon) is
-     * reduced to a single representative point in `_geo` — Meilisearch geo only
-     * supports points. True geometry queries still go through PostGIS
-     * ({@see scopeNearby()}); Meilisearch handles text + facets + a point-based
-     * `_geoRadius`/`_geoBoundingBox` approximation off that representative point.
+     * The indexed search document. The geometry (Point/LineString/Polygon) is
+     * reduced to a single representative point in `_geo` — the index's geo
+     * filtering only supports points. True geometry queries still go through
+     * PostGIS ({@see scopeNearby()}); the Manticore index handles text + facets
+     * + a point-based radius/bounding-box approximation off that representative
+     * point.
      *
      * @return array<string, mixed>
      */
@@ -120,7 +121,7 @@ class Roadwork extends Model
             // CBS administrative area the representative point falls in;
             // gemeente + provincie are facets, wijk/buurt are stored context.
             ...$this->administrativeAreas(),
-            // Unix timestamps so Meilisearch can range-filter and sort on them.
+            // Unix timestamps so the search engine can range-filter and sort on them.
             'start_ts' => $this->start_date ? strtotime((string) $this->start_date) : null,
             'end_ts' => $this->end_date ? strtotime((string) $this->end_date) : null,
             'last_seen_ts' => $this->last_seen_at ? strtotime((string) $this->last_seen_at) : null,
@@ -150,10 +151,10 @@ class Roadwork extends Model
 
     /**
      * Manticore table schema (mirrors {@see toSearchableArray()} fields). Used
-     * by the Manticore A/B engine ({@see ManticoreRoadworkSearch})
-     * and the `manticore:build-roadworks` builder, never by Meili/Scout. `_geo`
-     * is split into `lat`/`lng` floats (for GEODIST); `geometry` is stored JSON,
-     * returned but never matched/filtered.
+     * by the Manticore engine ({@see ManticoreRoadworkSearch}) and the
+     * `manticore:build-roadworks` builder. `_geo` is split into `lat`/`lng`
+     * floats (for GEODIST); `geometry` is stored JSON, returned but never
+     * matched/filtered.
      *
      * @return array{fields: array<string, array{type: string}>, settings: array<string, string>}
      */
@@ -391,7 +392,7 @@ class Roadwork extends Model
     }
 
     /**
-     * Free-text blob fed to Meilisearch's typo-tolerant search.
+     * Free-text blob fed to the search engine's typo-tolerant search.
      */
     private function searchableDescription(): string
     {

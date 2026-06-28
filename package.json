@@ -10,7 +10,8 @@
         "format:check": "biome format .",
         "lint": "biome check --write .",
         "lint:check": "biome check .",
-        "types:check": "vue-tsc --noEmit"
+        "types:check": "vue-tsc --noEmit",
+        "fix": "biome format --write . && biome check --write"
     },
     "devDependencies": {
         "@biomejs/biome": "2.5.1",

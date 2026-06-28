@@ -9,26 +9,39 @@ use App\Models\Provincie;
 use App\Models\Roadwork;
 use App\Models\Slug;
 use App\Models\Wijk;
-use App\Roadworks\RoadworkSearch;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use App\Roadworks\RoadworkUpserter;
 use App\Roadworks\SuggestionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Tests\Support\RequiresMeilisearch;
+use Laravel\Scout\EngineManager;
+use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 use Tests\TestCase;
 
-#[RequiresMeilisearch]
 class SuggestionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string INDEX = 'testing_roadworks';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['roadwork.manticore_index' => self::INDEX]);
+
+        try {
+            $this->dropIndex();
+            app(EngineManager::class)->driver('manticore')->createIndex(self::INDEX, (new Roadwork)->scoutIndexMigration());
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Manticore not available: '.$e->getMessage());
+        }
+    }
+
     protected function tearDown(): void
     {
-        if (! $this->meilisearchUnavailableForThisTest()) {
-            Roadwork::removeAllFromSearch();
-        }
+        $this->dropIndex();
 
         parent::tearDown();
     }
@@ -36,7 +49,7 @@ class SuggestionServiceTest extends TestCase
     public function test_authority_suggestion_links_to_its_slug_url(): void
     {
         $this->roadwork('NDW_S_AUTH', ['road_authority' => 'Rijkswaterstaat'], [5.1, 52.0]);
-        $this->reindex(1);
+        $this->syncToManticore();
 
         $suggestions = app(SuggestionService::class)->suggest('rijks');
 
@@ -58,7 +71,7 @@ class SuggestionServiceTest extends TestCase
             'parent_id' => null,
         ]);
         $this->roadwork('NDW_S_AMS', ['road_authority' => 'X'], [0.5, 0.5]);
-        $this->reindex(1);
+        $this->syncToManticore();
 
         $suggestions = app(SuggestionService::class)->suggest('amst');
 
@@ -96,12 +109,13 @@ class SuggestionServiceTest extends TestCase
 
         $this->roadwork('NDW_S_BNH', ['road_authority' => 'X'], [0.5, 0.5]);
         $this->roadwork('NDW_S_BLI', ['road_authority' => 'X'], [2.5, 0.5]);
-        $this->reindex(2);
+        $this->syncToManticore();
 
         $urls = collect(app(SuggestionService::class)->suggest('bergen'))
             ->where('type', 'gemeente')
             ->pluck('url')
             ->all();
+        fwrite(STDERR, "\nURLS: ".json_encode($urls)."\n");
 
         $this->assertContains('/noord-holland/bergen', $urls);
         $this->assertContains('/limburg/bergen', $urls);
@@ -112,7 +126,7 @@ class SuggestionServiceTest extends TestCase
         $this->roadwork('NDW_S_EX', ['road_authority' => 'Bergen'], [5.1, 52.0]);
         $this->roadwork('NDW_S_PF1', ['road_authority' => 'Bergen op Zoom'], [5.1, 52.0]);
         $this->roadwork('NDW_S_PF2', ['road_authority' => 'Bergen op Zoom'], [5.1, 52.0]);
-        $this->reindex(3);
+        $this->syncToManticore();
 
         $labels = collect(app(SuggestionService::class)->suggest('Bergen'))->pluck('label')->all();
 
@@ -130,16 +144,16 @@ class SuggestionServiceTest extends TestCase
         $this->roadwork('NDW_S_L1', ['road_authority' => 'Provincie Noord-Holland'], [5.1, 52.0]);
         $this->roadwork('NDW_S_L2', ['road_authority' => 'Provincie Noord-Brabant'], [5.1, 52.0]);
         $this->roadwork('NDW_S_L3', ['road_authority' => 'Provincie Noord-Drenthe'], [5.1, 52.0]);
-        $this->reindex(3);
+        $this->syncToManticore();
 
         $this->assertCount(2, app(SuggestionService::class)->suggest('Provincie Noord', 2));
     }
 
-    public function test_meilisearch_failure_degrades_to_empty(): void
+    public function test_search_failure_degrades_to_empty(): void
     {
-        $this->mock(RoadworkSearch::class)
+        $this->mock(RoadworkSearchEngine::class)
             ->shouldReceive('facetValues')
-            ->andThrow(new \RuntimeException('meili down'));
+            ->andThrow(new \RuntimeException('manticore down'));
 
         $this->assertSame([], app(SuggestionService::class)->suggest('amst'));
     }
@@ -183,23 +197,24 @@ class SuggestionServiceTest extends TestCase
         return $gemeente->fresh(['provincie']);
     }
 
-    private function reindex(int $expected): void
+    /**
+     * Mirror every seeded roadwork into the Manticore test index. Manticore's RT
+     * index is synchronous, so the documents are searchable immediately.
+     */
+    private function syncToManticore(): void
     {
-        Roadwork::removeAllFromSearch();
-        Roadwork::makeAllSearchable();
-        Artisan::call('scout:sync-index-settings');
-
-        $search = app(RoadworkSearch::class);
-        for ($attempt = 0; $attempt < 30; $attempt++) {
-            try {
-                if ((int) ($search->text('')['estimatedTotalHits'] ?? 0) === $expected) {
-                    return;
-                }
-            } catch (\Throwable) {
-                // keep waiting
-            }
-            usleep(200_000);
+        foreach (Roadwork::query()->with('currentSlug')->get() as $roadwork) {
+            $document = $roadwork->toManticoreDocument();
+            app(Builder::class)->index(self::INDEX)->replace($document['attributes'], $document['id']);
         }
-        $this->fail('Meilisearch did not reflect the expected document count in time.');
+    }
+
+    private function dropIndex(): void
+    {
+        try {
+            app(Builder::class)->index(self::INDEX)->drop();
+        } catch (\Throwable) {
+            // Index did not exist.
+        }
     }
 }

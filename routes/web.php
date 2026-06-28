@@ -22,7 +22,7 @@ Route::get('/api/roadworks/{id}/geometry', RoadworkGeometryController::class)
     ->name('api.roadworks.geometry');
 
 // Per-keystroke typeahead: throttle the public endpoint (each call fans
-// several Meilisearch facet searches + area-slug lookups).
+// several Manticore facet searches + area-slug lookups).
 Route::get('/api/suggest', SuggestController::class)
     ->middleware('throttle:120,1')
     ->name('api.suggest');

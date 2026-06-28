@@ -16,7 +16,7 @@ class RoadworkSearchController extends Controller
      * Search roadworks for the interactive map. With a `bbox` the result is the
      * set of roadworks in the viewport; without one it is a free-text lookup the
      * map uses to fly to a location. Either way the body is a GeoJSON
-     * FeatureCollection plus Meilisearch facet counts.
+     * FeatureCollection plus facet counts.
      */
     public function __invoke(Request $request): JsonResponse
     {
@@ -93,7 +93,7 @@ class RoadworkSearchController extends Controller
     }
 
     /**
-     * Map Meilisearch hits to GeoJSON point features, dropping any without a
+     * Map search hits to GeoJSON point features, dropping any without a
      * `_geo` position.
      *
      * @param  list<array<string, mixed>>  $hits

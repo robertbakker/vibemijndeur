@@ -8,7 +8,7 @@ use App\Models\Gemeente;
 use App\Models\Provincie;
 use App\Models\Roadwork;
 use App\Models\Slug;
-use App\Roadworks\RoadworkSearch;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -21,8 +21,8 @@ class PrettyUrlRoutingTest extends TestCase
     {
         parent::setUp();
 
-        // Avoid hitting live Meilisearch: the listing render just needs an empty result set.
-        $this->mock(RoadworkSearch::class, function ($mock): void {
+        // Avoid hitting live search: the listing render just needs an empty result set.
+        $this->mock(RoadworkSearchEngine::class, function ($mock): void {
             $mock->shouldReceive('browse')->andReturn(['estimatedTotalHits' => 0, 'hits' => []]);
         });
     }

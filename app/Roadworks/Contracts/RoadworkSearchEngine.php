@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace App\Roadworks\Contracts;
 
 use App\Roadworks\ManticoreRoadworkSearch;
-use App\Roadworks\RoadworkSearch;
 
 /**
  * Geo + faceted search over the roadworks index, independent of the backing
- * engine. The Meilisearch implementation ({@see RoadworkSearch})
- * and the Manticore implementation ({@see ManticoreRoadworkSearch})
- * return the same array shapes so consumers (the map API, the listing, the
- * footer counts, autosuggest) work against either, selected by config.
+ * engine. The Manticore implementation ({@see ManticoreRoadworkSearch})
+ * returns these array shapes so consumers (the map API, the listing, the
+ * footer counts, autosuggest) work against the interface, selected by config.
  *
- * Every method returns a normalized array shaped like a Meilisearch response:
- * `hits` (list of per-hit attribute maps), `facetDistribution`
- * (attribute => value => count) and `estimatedTotalHits`.
+ * Every method returns a normalized array: `hits` (list of per-hit attribute
+ * maps), `facetDistribution` (attribute => value => count) and
+ * `estimatedTotalHits`.
  */
 interface RoadworkSearchEngine
 {

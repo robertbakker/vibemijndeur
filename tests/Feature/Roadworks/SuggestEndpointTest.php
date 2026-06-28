@@ -5,24 +5,36 @@ declare(strict_types=1);
 namespace Tests\Feature\Roadworks;
 
 use App\Models\Roadwork;
-use App\Roadworks\RoadworkSearch;
 use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
-use Tests\Support\RequiresMeilisearch;
+use Laravel\Scout\EngineManager;
+use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 use Tests\TestCase;
 
-#[RequiresMeilisearch]
 class SuggestEndpointTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string INDEX = 'testing_roadworks';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['roadwork.manticore_index' => self::INDEX]);
+
+        try {
+            $this->dropIndex();
+            app(EngineManager::class)->driver('manticore')->createIndex(self::INDEX, (new Roadwork)->scoutIndexMigration());
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Manticore not available: '.$e->getMessage());
+        }
+    }
+
     protected function tearDown(): void
     {
-        if (! $this->meilisearchUnavailableForThisTest()) {
-            Roadwork::removeAllFromSearch();
-        }
+        $this->dropIndex();
 
         parent::tearDown();
     }
@@ -30,7 +42,7 @@ class SuggestEndpointTest extends TestCase
     public function test_it_returns_suggestions_as_json(): void
     {
         $this->index('NDW_EP_1', 'Rijkswaterstaat');
-        $this->reindex(1);
+        $this->syncToManticore();
 
         $this->getJson('/api/suggest?q=rijks')
             ->assertOk()
@@ -54,8 +66,8 @@ class SuggestEndpointTest extends TestCase
 
     public function test_endpoint_is_rate_limited(): void
     {
-        // Blank term short-circuits before Meilisearch, so this exercises only
-        // the throttle:120,1 middleware. The 121st request in the window is 429.
+        // Blank term short-circuits before the search engine, so this exercises
+        // only the throttle:120,1 middleware. The 121st request in the window is 429.
         for ($request = 0; $request < 120; $request++) {
             $this->getJson('/api/suggest?q=')->assertOk();
         }
@@ -78,23 +90,20 @@ class SuggestEndpointTest extends TestCase
         );
     }
 
-    private function reindex(int $expected): void
+    private function syncToManticore(): void
     {
-        Roadwork::removeAllFromSearch();
-        Roadwork::makeAllSearchable();
-        Artisan::call('scout:sync-index-settings');
-
-        $search = app(RoadworkSearch::class);
-        for ($attempt = 0; $attempt < 30; $attempt++) {
-            try {
-                if ((int) ($search->text('')['estimatedTotalHits'] ?? 0) === $expected) {
-                    return;
-                }
-            } catch (\Throwable) {
-                // keep waiting
-            }
-            usleep(200_000);
+        foreach (Roadwork::query()->with('currentSlug')->get() as $roadwork) {
+            $document = $roadwork->toManticoreDocument();
+            app(Builder::class)->index(self::INDEX)->replace($document['attributes'], $document['id']);
         }
-        $this->fail('Meilisearch did not reflect the expected document count in time.');
+    }
+
+    private function dropIndex(): void
+    {
+        try {
+            app(Builder::class)->index(self::INDEX)->drop();
+        } catch (\Throwable) {
+            // Index did not exist.
+        }
     }
 }

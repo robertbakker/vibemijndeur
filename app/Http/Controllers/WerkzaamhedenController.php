@@ -23,7 +23,7 @@ use Inertia\Response;
 
 /**
  * The faceted "Werkzaamheden" listing: a text + facet search over the
- * Meilisearch roadworks index, rendered as cards with disjunctive facet counts
+ * Manticore roadworks index, rendered as cards with disjunctive facet counts
  * (each group's counts ignore that group's own selection, so options never
  * vanish once you pick one).
  */
@@ -34,7 +34,7 @@ class WerkzaamhedenController extends Controller
     private const int MAX_FACET_OPTIONS = 12;
 
     /**
-     * Facet group => the Meilisearch attribute it filters/counts on.
+     * Facet group => the index attribute it filters/counts on.
      */
     private const array FACETS = [
         'status' => 'status_key',
@@ -127,7 +127,7 @@ class WerkzaamhedenController extends Controller
     }
 
     /**
-     * Run the Meili search and render the Inertia page. Shared by the
+     * Run the search and render the Inertia page. Shared by the
      * query-string entry ({@see __invoke}) and the pretty-URL entry
      * ({@see renderFromQuery}).
      */
@@ -177,7 +177,7 @@ class WerkzaamhedenController extends Controller
     }
 
     /**
-     * Load the page's roadworks as cards, preserving Meilisearch's hit order.
+     * Load the page's roadworks as cards, preserving the search engine's hit order.
      *
      * @param  list<int>  $ids
      * @return list<RoadworkCard>

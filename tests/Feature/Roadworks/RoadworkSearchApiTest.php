@@ -5,27 +5,36 @@ declare(strict_types=1);
 namespace Tests\Feature\Roadworks;
 
 use App\Models\Roadwork;
-use App\Roadworks\RoadworkSearch;
 use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
-use Tests\Support\RequiresMeilisearch;
+use Laravel\Scout\EngineManager;
+use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 use Tests\TestCase;
 
 /**
- * Exercises the live Meilisearch path. Runs against an isolated `testing_`
- * prefixed index (see phpunit.xml) and waits out Meilisearch's asynchronous
- * indexing before asserting.
+ * Exercises the search API against the Manticore engine. Roadworks are seeded in
+ * Postgres and mirrored into a disposable `testing_roadworks` index so the
+ * controller resolves real documents. Skips when Manticore is unreachable.
  */
-#[RequiresMeilisearch]
 class RoadworkSearchApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string INDEX = 'testing_roadworks';
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        config(['roadwork.manticore_index' => self::INDEX]);
+
+        try {
+            $this->dropIndex();
+            app(EngineManager::class)->driver('manticore')->createIndex(self::INDEX, (new Roadwork)->scoutIndexMigration());
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Manticore not available: '.$e->getMessage());
+        }
 
         $point = ['type' => 'Point', 'coordinates' => [5.1214, 52.0907]]; // Utrecht
         $restriction = ['type' => 'Feature', 'geometry' => ['type' => 'LineString', 'coordinates' => [[5.12, 52.09], [5.13, 52.09]]], 'properties' => []];
@@ -40,17 +49,12 @@ class RoadworkSearchApiTest extends TestCase
             CarbonImmutable::parse('2026-06-18T10:00:00Z'),
         );
 
-        Roadwork::removeAllFromSearch();
-        Roadwork::makeAllSearchable();
-        Artisan::call('scout:sync-index-settings');
-        $this->waitForIndex(expected: 1);
+        $this->syncToManticore();
     }
 
     protected function tearDown(): void
     {
-        if (! $this->meilisearchUnavailableForThisTest()) {
-            Roadwork::removeAllFromSearch();
-        }
+        $this->dropIndex();
 
         parent::tearDown();
     }
@@ -96,25 +100,24 @@ class RoadworkSearchApiTest extends TestCase
     }
 
     /**
-     * Poll the index until it reflects the expected document count (Meilisearch
-     * indexes asynchronously), or give up after ~6 seconds.
+     * Mirror every seeded roadwork into the Manticore test index, the same shape
+     * `manticore:build-roadworks` produces. Manticore's RT index is synchronous,
+     * so the documents are searchable immediately.
      */
-    private function waitForIndex(int $expected): void
+    private function syncToManticore(): void
     {
-        $search = app(RoadworkSearch::class);
-
-        for ($attempt = 0; $attempt < 30; $attempt++) {
-            try {
-                if ((int) ($search->text('')['estimatedTotalHits'] ?? 0) === $expected) {
-                    return;
-                }
-            } catch (\Throwable) {
-                // Index/settings not ready yet; keep waiting.
-            }
-
-            usleep(200_000);
+        foreach (Roadwork::query()->with('currentSlug')->get() as $roadwork) {
+            $document = $roadwork->toManticoreDocument();
+            app(Builder::class)->index(self::INDEX)->replace($document['attributes'], $document['id']);
         }
+    }
 
-        $this->fail('Meilisearch did not reflect the expected document count in time.');
+    private function dropIndex(): void
+    {
+        try {
+            app(Builder::class)->index(self::INDEX)->drop();
+        } catch (\Throwable) {
+            // Index did not exist.
+        }
     }
 }

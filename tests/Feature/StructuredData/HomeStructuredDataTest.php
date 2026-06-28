@@ -18,7 +18,7 @@ class HomeStructuredDataTest extends TestCase
         parent::setUp();
 
         // Seed the cache so the shared popularGemeenten prop resolves
-        // without hitting Meilisearch (same pattern as FooterGemeentenTest).
+        // without hitting the search backend (same pattern as FooterGemeentenTest).
         Cache::put('footer:popular-gemeenten', PopularGemeenten::merge([]));
     }
 

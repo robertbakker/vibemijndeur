@@ -10,10 +10,9 @@ use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 /**
  * Manticore Search implementation of the roadworks search contract.
  *
- * Queries run through the package's mysql Builder (PDO on 9306) — NOT via Scout,
- * which Meili holds as the global driver — and are normalized to the same shape
- * the Meili implementation returns (`hits` / `facetDistribution` /
- * `estimatedTotalHits`) so the two can be A/B'd behind {@see RoadworkSearchEngine}.
+ * Queries run through the package's mysql Builder (PDO on 9306) and are
+ * normalized to the contract's response shape (`hits` / `facetDistribution` /
+ * `estimatedTotalHits`) so consumers work against {@see RoadworkSearchEngine}.
  *
  * Full-text goes through Manticore `MATCH()`, scalar facets through `FACET`
  * (respecting the WHERE filter, so disjunctive counts work), geo through
@@ -24,8 +23,8 @@ use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
 final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
 {
     /**
-     * The per-hit columns the map needs — mirrors the Meili `POINT_ATTRIBUTES`
-     * allowlist. `lat`/`lng` are remapped to a `_geo` shape on the way out.
+     * The per-hit columns the map needs — the point attribute allowlist.
+     * `lat`/`lng` are remapped to a `_geo` shape on the way out.
      *
      * @var list<string>
      */
@@ -188,8 +187,8 @@ final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
     }
 
     /**
-     * A single OR group across the area dimensions (matches Meili, where a
-     * nested filter array is OR'd): `(gemeente IN (...) OR provincie IN (...))`.
+     * A single OR group across the area dimensions (matches the listing's OR
+     * semantics): `(gemeente IN (...) OR provincie IN (...))`.
      *
      * @param  array<string, list<string>>  $areaFilters
      */
@@ -223,7 +222,7 @@ final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
 
     /**
      * Normalize the map/point response: rebuild `_geo` from lat/lng, decode the
-     * stored geometry JSON, and shape facet counts like Meilisearch.
+     * stored geometry JSON, and shape facet counts as `[field => [value => count]]`.
      *
      * @param  array{hits: list<array<string, mixed>>, facets: array<string, mixed>, meta: array<string, mixed>}  $result
      * @param  list<string>  $facets
@@ -260,7 +259,7 @@ final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
 
     /**
      * Convert the Builder's formatted facets (`[field => [['key'=>v,'count'=>n]]]`)
-     * into Meilisearch's `[field => [value => count]]`.
+     * into the normalized `[field => [value => count]]` shape.
      *
      * @param  array{facets: array<string, mixed>}  $result
      * @param  list<string>  $facets
@@ -279,7 +278,7 @@ final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
                     continue;
                 }
                 $value = (string) $row['key'];
-                // Meili omits null/empty facet values from the distribution; a
+                // Null/empty facet values are omitted from the distribution; a
                 // missing gemeente/status indexes as '' here, so skip it too.
                 if ($value === '') {
                     continue;

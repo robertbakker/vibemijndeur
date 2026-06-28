@@ -3,10 +3,7 @@
     "name": "laravel/blank-vue-starter-kit",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
+    "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
@@ -15,7 +12,6 @@
         "laravel/scout": "^11.3",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "meilisearch/meilisearch-php": "^1.16",
         "romanstruk/manticore-scout-engine": "^8.0",
         "spatie/laravel-data": "^4.23"
     },
@@ -61,12 +57,8 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve --host=localhost\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
-        "lint": [
-            "pint --parallel"
-        ],
-        "lint:check": [
-            "pint --parallel --test"
-        ],
+        "lint": ["pint --parallel"],
+        "lint:check": ["pint --parallel --test"],
         "check": [
             "Composer\\Config::disableProcessTimeout",
             "pint --parallel --test",
@@ -89,9 +81,7 @@
             "npm run types:check",
             "@test"
         ],
-        "types:check": [
-            "phpstan analyse"
-        ],
+        "types:check": ["phpstan analyse"],
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",
