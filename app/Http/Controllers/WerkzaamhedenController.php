@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Data\FacetGroup;
 use App\Data\RoadworkCard;
 use App\Data\RoadworkStatus;
+use App\Models\Gemeente;
+use App\Models\Provincie;
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkSearch;
+use App\Router\FacetUrlBuilder;
 use App\Router\ListingQuery;
 use App\StructuredData\BreadcrumbListNode;
 use App\StructuredData\CollectionPageNode;
@@ -43,6 +47,7 @@ class WerkzaamhedenController extends Controller
     public function __construct(
         private readonly RoadworkSearch $search,
         private readonly StructuredData $structuredData,
+        private readonly FacetUrlBuilder $facetUrls,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -63,21 +68,26 @@ class WerkzaamhedenController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $query = (string) ($validated['q'] ?? '');
+        $term = (string) ($validated['q'] ?? '');
         $sort = $validated['sort'] ?? 'start';
         $page = max(1, (int) ($validated['page'] ?? 1));
 
-        // Active filters keyed by the Meilisearch attribute they constrain.
-        $selected = [
-            'status_key' => array_values($validated['status'] ?? []),
-            'work_type' => array_values($validated['type'] ?? []),
-            'gemeente' => array_values($validated['gemeente'] ?? []),
-            'provincie' => array_values($validated['provincie'] ?? []),
-            'road_authority' => array_values($validated['authority'] ?? []),
-        ];
-        $filters = array_filter($selected, fn (array $values): bool => $values !== []);
+        // The canonical entry is the clean pretty URL; this query-string form is
+        // back-compat. Reconstruct a ListingQuery from any facet params.
+        $query = new ListingQuery;
+        foreach (array_values($validated['status'] ?? []) as $status) {
+            $query->addStatus($status);
+        }
+        foreach (array_values($validated['type'] ?? []) as $type) {
+            $query->addType($type);
+        }
+        foreach (array_values($validated['authority'] ?? []) as $authority) {
+            $query->addAuthority($authority);
+        }
+        $this->addAreasByName($query, 'gemeente', array_values($validated['gemeente'] ?? []));
+        $this->addAreasByName($query, 'provincie', array_values($validated['provincie'] ?? []));
 
-        return $this->render($query, $filters, $sort, $page);
+        return $this->render($query, $term, $sort, $page);
     }
 
     /**
@@ -96,26 +106,45 @@ class WerkzaamhedenController extends Controller
         $sort = $validated['sort'] ?? $query->sort() ?? 'start';
         $page = max(1, (int) ($validated['page'] ?? $query->page()));
 
-        return $this->render($term, $query->toFilters(), $sort, $page);
+        return $this->render($query, $term, $sort, $page);
+    }
+
+    /**
+     * Resolve facet area names to area rows and add them to the query.
+     *
+     * @param  list<string>  $names
+     */
+    private function addAreasByName(ListingQuery $query, string $dimension, array $names): void
+    {
+        if ($names === []) {
+            return;
+        }
+
+        $model = $dimension === 'provincie' ? Provincie::class : Gemeente::class;
+        foreach ($model::query()->whereIn('name', $names)->get() as $area) {
+            $query->addArea($dimension, (int) $area->getKey(), (string) $area->name);
+        }
     }
 
     /**
      * Run the Meili search and render the Inertia page. Shared by the
      * query-string entry ({@see __invoke}) and the pretty-URL entry
      * ({@see renderFromQuery}).
-     *
-     * @param  array<string, list<string>>  $filters  keyed by Meili attribute
      */
-    private function render(string $query, array $filters, string $sort, int $page): Response
+    private function render(ListingQuery $query, string $term, string $sort, int $page): Response
     {
+        $filters = $query->toFilters();
+        $areaFilters = $query->toAreaFilters();
         $sortExpression = $sort === 'status' ? ['status_order:asc'] : ['start_ts:asc'];
 
         $main = $this->search->browse(
-            $query,
+            $term,
             $filters,
             $sortExpression,
             ($page - 1) * self::PER_PAGE,
             self::PER_PAGE,
+            [],
+            $areaFilters,
         );
 
         $total = (int) ($main['estimatedTotalHits'] ?? 0);
@@ -136,14 +165,9 @@ class WerkzaamhedenController extends Controller
             // Merge so "Meer laden" partial reloads append instead of replacing;
             // a fresh visit (filter change) resets the list.
             'results' => Inertia::merge($cards),
-            'facets' => $this->facets($query, $filters),
+            'facets' => $this->facets($query, $term, $filters, $areaFilters),
             'filters' => [
-                'q' => $query,
-                'status' => $filters['status_key'] ?? [],
-                'type' => $filters['work_type'] ?? [],
-                'gemeente' => $filters['gemeente'] ?? [],
-                'provincie' => $filters['provincie'] ?? [],
-                'authority' => $filters['road_authority'] ?? [],
+                'q' => $term,
                 'sort' => $sort,
             ],
             'total' => $total,
@@ -183,41 +207,41 @@ class WerkzaamhedenController extends Controller
 
     /**
      * Disjunctive facet counts: each group is counted with every *other*
-     * group's filter applied but not its own.
+     * group's filter applied but not its own. Each group's options are turned
+     * into {@see FacetGroup}s whose options carry clean toggle URLs.
      *
      * @param  array<string, list<string>>  $filters
-     * @return array<string, list<array<string, mixed>>>
+     * @param  array<string, list<string>>  $areaFilters
+     * @return array<string, FacetGroup>
      */
-    private function facets(string $query, array $filters): array
+    private function facets(ListingQuery $query, string $term, array $filters, array $areaFilters): array
     {
         $distributions = [];
         foreach (self::FACETS as $group => $attribute) {
-            $without = array_filter(
-                $filters,
-                fn (string $key): bool => $key !== $attribute,
-                ARRAY_FILTER_USE_KEY,
-            );
-            $raw = $this->search->browse($query, $without, [], 0, 0, [$attribute]);
+            // Drop this group's own selection (disjunctive counts).
+            $withoutFilters = array_filter($filters, fn (string $k): bool => $k !== $attribute, ARRAY_FILTER_USE_KEY);
+            $withoutArea = array_filter($areaFilters, fn (string $k): bool => $k !== $attribute, ARRAY_FILTER_USE_KEY);
+            $raw = $this->search->browse($term, $withoutFilters, [], 0, 0, [$attribute], $withoutArea);
             $distributions[$group] = $raw['facetDistribution'][$attribute] ?? [];
         }
 
         return [
-            'status' => $this->statusOptions($distributions['status'], $filters['status_key'] ?? []),
-            'type' => $this->countOptions($distributions['type'], $filters['work_type'] ?? []),
-            'gemeente' => $this->countOptions($distributions['gemeente'], $filters['gemeente'] ?? []),
-            'provincie' => $this->countOptions($distributions['provincie'], $filters['provincie'] ?? []),
-            'authority' => $this->countOptions($distributions['authority'], $filters['road_authority'] ?? []),
+            'status' => new FacetGroup('status', 'Status', $this->facetUrls->options($query, 'status', $this->statusRows($distributions['status'], $filters['status_key'] ?? []))),
+            'gemeente' => new FacetGroup('gemeente', 'Gemeente', $this->facetUrls->options($query, 'gemeente', $this->countRows($distributions['gemeente'], $areaFilters['gemeente'] ?? []))),
+            'provincie' => new FacetGroup('provincie', 'Provincie', $this->facetUrls->options($query, 'provincie', $this->countRows($distributions['provincie'], $areaFilters['provincie'] ?? []))),
+            'type' => new FacetGroup('type', 'Soort werk', $this->facetUrls->options($query, 'type', $this->countRows($distributions['type'], $filters['work_type'] ?? []))),
+            'authority' => new FacetGroup('authority', 'Uitvoerder', $this->facetUrls->options($query, 'authority', $this->countRows($distributions['authority'], $filters['road_authority'] ?? []))),
         ];
     }
 
     /**
-     * Status options in lifecycle order, each with its label and dot colour.
+     * Status rows in lifecycle order, each with its label and dot colour.
      *
      * @param  array<string, int>  $distribution
      * @param  list<string>  $checked
      * @return list<array<string, mixed>>
      */
-    private function statusOptions(array $distribution, array $checked): array
+    private function statusRows(array $distribution, array $checked): array
     {
         $options = [];
         foreach (RoadworkStatus::cases() as $status) {
@@ -242,7 +266,7 @@ class WerkzaamhedenController extends Controller
      * @param  list<string>  $checked
      * @return list<array<string, mixed>>
      */
-    private function countOptions(array $distribution, array $checked): array
+    private function countRows(array $distribution, array $checked): array
     {
         arsort($distribution);
 
