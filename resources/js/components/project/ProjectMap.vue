@@ -5,12 +5,14 @@ import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MaterialIcon from '@/components/MaterialIcon.vue';
 import { buildMapStyle } from '@/lib/mapStyle';
+import { MARKER_ICONS, whiteGlyphSvg } from '@/lib/markerIcons';
 
 const props = defineProps<{
     roadworkId: number;
-    locationLabel: string;
     latitude: number | null;
     longitude: number | null;
+    markerColor: string;
+    icon: string;
 }>();
 
 const mapContainer = useTemplateRef<HTMLDivElement>('mapContainer');
@@ -18,11 +20,6 @@ const map = ref<maplibregl.Map>();
 
 const hasLocation = computed(
     () => props.latitude !== null && props.longitude !== null,
-);
-const coordinates = computed(() =>
-    props.latitude !== null && props.longitude !== null
-        ? `${props.latitude.toFixed(5)}, ${props.longitude.toFixed(5)}`
-        : null,
 );
 
 const PMTILES_BOUNDS: [[number, number], [number, number]] = [
@@ -91,11 +88,6 @@ onMounted(async () => {
     });
     map.value = instance;
 
-    // Location pin at the representative point.
-    new maplibregl.Marker({ color: '#003082' })
-        .setLngLat(center)
-        .addTo(instance);
-
     instance.on('load', async () => {
         const [arrowImage, crossImage] = await Promise.all([
             loadSvgImage(ARROW_SVG, 40),
@@ -103,6 +95,22 @@ onMounted(async () => {
         ]);
         instance.addImage('detour-marker', arrowImage, { pixelRatio: 2 });
         instance.addImage('restriction-marker', crossImage, { pixelRatio: 2 });
+
+        // Status-coloured pin with white type glyph at the representative point,
+        // matching the /kaart overview markers (RoadworkMap points/point-icons).
+        const glyph = MARKER_ICONS[props.icon];
+        if (glyph) {
+            const glyphImage = await loadSvgImage(whiteGlyphSvg(glyph), 36);
+            instance.addImage('point-icon', glyphImage, { pixelRatio: 2 });
+        }
+        instance.addSource('point', {
+            type: 'geojson',
+            data: {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: center },
+                properties: {},
+            },
+        });
 
         const response = await fetch(
             `/api/roadworks/${props.roadworkId}/geometry`,
@@ -181,6 +189,32 @@ onMounted(async () => {
             },
         });
 
+        // Point marker drawn last so it sits on top of the detour/restriction lines.
+        instance.addLayer({
+            id: 'point',
+            type: 'circle',
+            source: 'point',
+            paint: {
+                'circle-color': props.markerColor,
+                'circle-radius': 19,
+                'circle-stroke-width': 3,
+                'circle-stroke-color': '#ffffff',
+            },
+        });
+        if (glyph) {
+            instance.addLayer({
+                id: 'point-icon',
+                type: 'symbol',
+                source: 'point',
+                layout: {
+                    'icon-image': 'point-icon',
+                    'icon-size': 0.85,
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                },
+            });
+        }
+
         // Frame the geometry if it covers more than the single point.
         const bounds = new maplibregl.LngLatBounds();
         geometry.features.forEach((f) => {
@@ -211,46 +245,16 @@ onBeforeUnmount(() => {
 
 <template>
     <div
-        class="border-outline-variant overflow-hidden rounded-2xl border bg-white shadow-sm"
+        class="border-outline-variant relative h-64 overflow-hidden rounded-2xl border bg-white shadow-sm"
     >
+        <div v-if="hasLocation" ref="mapContainer" class="h-full w-full"></div>
         <div
-            class="p-stack-md border-outline-variant bg-surface-container-low flex items-center justify-between border-b"
+            v-else
+            class="bg-surface-container-low text-on-surface-variant flex h-full w-full flex-col items-center justify-center gap-2"
         >
-            <h3 class="font-label-md text-label-md text-primary font-bold">
-                Projectlocatie
-            </h3>
-            <span
-                class="border-outline-variant text-primary rounded border bg-white px-2 py-1 text-[10px] font-bold"
-                >LIVE KAART</span
-            >
-        </div>
-
-        <div class="relative h-64">
-            <div
-                v-if="hasLocation"
-                ref="mapContainer"
-                class="h-full w-full"
-            ></div>
-            <div
-                v-else
-                class="bg-surface-container-low text-on-surface-variant flex h-full w-full flex-col items-center justify-center gap-2"
-            >
-                <MaterialIcon name="location_off" class="text-2xl" />
-                <span class="font-caption text-caption"
-                    >Locatie niet beschikbaar</span
-                >
-            </div>
-        </div>
-
-        <div class="p-stack-md flex items-center justify-between">
-            <span
-                class="font-caption text-caption text-on-surface-variant flex items-center gap-1"
-            >
-                <MaterialIcon name="location_on" class="text-xs" />
-                {{ coordinates ?? locationLabel }}
-            </span>
-            <span class="text-primary font-label-md text-caption font-bold"
-                >{{ locationLabel }}</span
+            <MaterialIcon name="location_off" class="text-2xl" />
+            <span class="font-caption text-caption"
+                >Locatie niet beschikbaar</span
             >
         </div>
     </div>

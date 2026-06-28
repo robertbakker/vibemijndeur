@@ -22,6 +22,41 @@ const facts = computed(() => [
     { label: 'Fase', value: props.project.phaseLabel },
     { label: 'Uitvoerder', value: props.project.authority ?? 'Onbekend' },
 ]);
+
+// Tone for the hindrance banner, scaled to the hindrance class (0 → 4).
+const impact = computed(() => {
+    const level = props.project.hindranceLevel;
+    if (level < 0) {
+        return {
+            icon: 'fa-circle-question',
+            bg: '#EEF1F5',
+            border: '#9AA6B8',
+            text: '#3D5078',
+        };
+    }
+    if (level === 0) {
+        return {
+            icon: 'fa-circle-check',
+            bg: '#E2F1E9',
+            border: '#1F8A5B',
+            text: '#14633F',
+        };
+    }
+    if (level <= 2) {
+        return {
+            icon: 'fa-triangle-exclamation',
+            bg: '#FFF4C2',
+            border: '#C99700',
+            text: '#7A5B00',
+        };
+    }
+    return {
+        icon: 'fa-circle-exclamation',
+        bg: '#FBE5E5',
+        border: '#C0392B',
+        text: '#8A211A',
+    };
+});
 </script>
 
 <template>
@@ -135,6 +170,26 @@ const facts = computed(() => [
                 >
                     Blijft mijn huis bereikbaar?
                 </h2>
+                <div
+                    class="mb-3.5 flex items-center gap-3 rounded-[11px] border-l-4 px-4 py-3"
+                    :style="{ background: impact.bg, borderColor: impact.border }"
+                >
+                    <i
+                        class="fa-solid text-[16px]"
+                        :class="impact.icon"
+                        :style="{ color: impact.border }"
+                    ></i>
+                    <div
+                        class="text-[14px] font-semibold"
+                        :style="{ color: impact.text }"
+                    >
+                        {{ project.hindranceLabel }}
+                        <span class="font-medium opacity-80"
+                            >· ernst:
+                            {{ project.severityLabel.toLowerCase() }}</span
+                        >
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div
                         v-for="item in access"
@@ -167,16 +222,25 @@ const facts = computed(() => [
 
             <!-- Location -->
             <div class="px-7 pt-4.5 pb-1.5">
-                <h2
-                    class="mt-2.5 mb-3 border-l-4 border-secondary-container pl-3 font-display text-[18px] font-bold text-primary"
+                <div
+                    class="mt-2.5 mb-3 flex items-center justify-between gap-2"
                 >
-                    Locatie
-                </h2>
+                    <h2
+                        class="border-l-4 border-secondary-container pl-3 font-display text-[18px] font-bold text-primary"
+                    >
+                        Locatie
+                    </h2>
+                    <span
+                        class="rounded border border-outline-variant bg-white px-2 py-1 text-[10px] font-bold text-primary"
+                        >LIVE KAART</span
+                    >
+                </div>
                 <ProjectMap
                     :roadwork-id="project.id"
-                    :location-label="project.locationLabel"
                     :latitude="project.latitude"
                     :longitude="project.longitude"
+                    :marker-color="project.markerColor"
+                    :icon="project.icon"
                 />
             </div>
 

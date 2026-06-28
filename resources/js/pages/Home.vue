@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import {
+    AutocompleteAnchor,
+    AutocompleteContent,
+    AutocompleteEmpty,
+    AutocompleteInput,
+    AutocompleteItem,
+    AutocompletePortal,
+    AutocompleteRoot,
+    AutocompleteViewport,
+} from 'reka-ui';
+import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { suggest } from '@/routes/api';
 
 defineOptions({ layout: AppLayout });
 
@@ -10,7 +21,42 @@ defineProps<{
     roadworksTotal: number;
 }>();
 
-const search = ref('Lindengracht, Amsterdam');
+const search = ref('');
+const open = ref(false);
+const suggestions = ref<App.Data.Suggestion[]>([]);
+
+// Debounced typeahead against /api/suggest. requestId guards against a slow
+// earlier response overwriting a newer one (last-write-wins by keystroke).
+let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let requestId = 0;
+
+watch(search, (term) => {
+    clearTimeout(debounceTimer);
+    const query = term.trim();
+    if (query.length < 2) {
+        suggestions.value = [];
+        open.value = false;
+        return;
+    }
+    debounceTimer = setTimeout(async () => {
+        const id = ++requestId;
+        const response = await fetch(
+            suggest.url({ query: { q: query, limit: 8 } }),
+            { headers: { Accept: 'application/json' } },
+        );
+        const data: { suggestions?: App.Data.Suggestion[] } =
+            await response.json();
+        if (id !== requestId) {
+            return;
+        }
+        suggestions.value = data.suggestions ?? [];
+        open.value = suggestions.value.length > 0;
+    }, 180);
+});
+
+function goToSuggestion(suggestion: App.Data.Suggestion): void {
+    router.visit(suggestion.url);
+}
 
 function goToMap(): void {
     router.visit('/kaart');
@@ -75,26 +121,67 @@ const infoCards = [
                     klaar is en hoe uw straat bereikbaar blijft.
                 </p>
 
-                <form
-                    class="flex max-w-[520px] gap-2.5 rounded-xl bg-white p-2 shadow-[0_14px_36px_rgba(0,0,0,0.22)]"
-                    @submit.prevent="goToMap"
+                <AutocompleteRoot
+                    v-model="search"
+                    v-model:open="open"
+                    :ignore-filter="true"
+                    class="max-w-[520px]"
                 >
-                    <div class="flex items-center pl-2.5 text-outline">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <input
-                        v-model="search"
-                        type="text"
-                        aria-label="Zoek op straat of plaats"
-                        class="flex-1 bg-transparent px-2 py-2.5 text-[16px] text-on-surface outline-none"
+                    <AutocompleteAnchor
+                        class="flex gap-2.5 rounded-xl bg-white p-2 shadow-[0_14px_36px_rgba(0,0,0,0.22)]"
                     >
-                    <button
-                        type="submit"
-                        class="rounded-lg bg-secondary-container px-6 py-3 text-[15px] font-bold text-on-secondary-container"
-                    >
-                        Zoeken
-                    </button>
-                </form>
+                        <div class="flex items-center pl-2.5 text-outline">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <AutocompleteInput
+                            aria-label="Zoek op straat of plaats"
+                            placeholder="Bijv. Lindengracht, Amsterdam"
+                            class="flex-1 bg-transparent px-2 py-2.5 text-[16px] text-on-surface outline-none"
+                            @keydown.enter="!open && goToMap()"
+                        />
+                        <button
+                            type="button"
+                            class="rounded-lg bg-secondary-container px-6 py-3 text-[15px] font-bold text-on-secondary-container"
+                            @click="goToMap"
+                        >
+                            Zoeken
+                        </button>
+                    </AutocompleteAnchor>
+
+                    <AutocompletePortal>
+                        <AutocompleteContent
+                            position="popper"
+                            :side-offset="8"
+                            class="z-50 max-h-[320px] w-[var(--reka-popper-anchor-width)] overflow-hidden overflow-y-auto rounded-xl border border-outline-variant bg-white py-1.5 shadow-[0_18px_44px_rgba(10,30,60,0.22)]"
+                        >
+                            <AutocompleteViewport>
+                                <AutocompleteEmpty
+                                    class="px-4 py-3 text-[14px] text-on-surface-variant"
+                                >
+                                    Geen plaatsen gevonden.
+                                </AutocompleteEmpty>
+                                <AutocompleteItem
+                                    v-for="suggestion in suggestions"
+                                    :key="suggestion.url"
+                                    :value="suggestion.label"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-[15px] text-on-surface data-[highlighted]:bg-surface-container-low"
+                                    @select="goToSuggestion(suggestion)"
+                                >
+                                    <i
+                                        class="fa-solid fa-location-dot w-4 text-center text-[13px] text-outline"
+                                    ></i>
+                                    <span class="flex-1 truncate font-semibold"
+                                        >{{ suggestion.label }}</span
+                                    >
+                                    <span
+                                        class="text-[12px] font-medium text-on-surface-variant"
+                                        >{{ suggestion.count }}</span
+                                    >
+                                </AutocompleteItem>
+                            </AutocompleteViewport>
+                        </AutocompleteContent>
+                    </AutocompletePortal>
+                </AutocompleteRoot>
 
                 <div
                     class="mt-4.5 flex items-center gap-4 text-[13px] font-medium text-on-primary-container/80"

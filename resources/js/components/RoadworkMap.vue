@@ -4,7 +4,7 @@ import { Protocol } from 'pmtiles';
 import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { buildMapStyle } from '@/lib/mapStyle';
-import { type IconGlyph, MARKER_ICONS } from '@/lib/markerIcons';
+import { MARKER_ICONS, whiteGlyphSvg } from '@/lib/markerIcons';
 import { typeView } from '@/lib/roadwork';
 
 export interface RoadworkFeatureProps {
@@ -122,17 +122,6 @@ const ARROW_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0961ed"/><stop offset="1" stop-color="#00298a"/></linearGradient></defs><path d="M35 20 L10 6 L18 20 L10 34 Z" fill="url(#ag)" stroke="#001a4d" stroke-width="2.5" stroke-linejoin="round"/></svg>';
 const CROSS_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M11 11 L29 29 M29 11 L11 29" fill="none" stroke="#2e0a0a" stroke-width="10" stroke-linecap="round"/><path d="M11 11 L29 29 M29 11 L11 29" fill="none" stroke="#861717" stroke-width="6" stroke-linecap="round"/></svg>';
-
-// A white Font Awesome glyph centred in a square viewBox, ready to rasterise
-// onto a status-coloured marker. FA viewBoxes aren't square, so the path is
-// translated to keep its aspect ratio instead of stretching.
-function whiteGlyphSvg(glyph: IconGlyph): string {
-    const [, , width, height] = glyph.viewBox.split(' ').map(Number);
-    const side = Math.max(width, height);
-    const offsetX = (side - width) / 2;
-    const offsetY = (side - height) / 2;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 ${side} ${side}"><path d="${glyph.path}" fill="#ffffff" transform="translate(${offsetX} ${offsetY})"/></svg>`;
-}
 
 interface RoadworksResponse {
     features: GeoJSON.Feature[];
