@@ -40,9 +40,23 @@ class ListingUrlMapperTest extends TestCase
         $this->seedAmsterdam();
         $query = $this->mapper()->parse('amsterdam/gepland/wegdek');
 
-        $this->assertSame('gemeente', $query->area()['level']);
+        $this->assertSame('gemeente', $query->areas()[0]['level']);
         $this->assertSame(['planned'], $query->statuses());
         $this->assertSame(['Wegdek'], $query->types());
+    }
+
+    public function test_comma_area_list_is_sorted_in_canonical(): void
+    {
+        $this->seedAmsterdam();
+        $province = Provincie::factory()->create(['name' => 'Utrecht']);
+        $utr = Gemeente::factory()->create(['name' => 'Utrecht', 'provincie_id' => $province->id]);
+        Slug::factory()->create([
+            'slug' => 'utrecht', 'parent_id' => null,
+            'sluggable_type' => $utr->getMorphClass(), 'sluggable_id' => $utr->id,
+        ]);
+
+        $query = $this->mapper()->parse('utrecht,amsterdam');
+        $this->assertSame('/amsterdam,utrecht', $this->mapper()->build($query));
     }
 
     public function test_round_trip_build_equals_canonical(): void

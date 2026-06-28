@@ -41,7 +41,7 @@ class ListingController extends Controller
         try {
             $query = $this->mapper->parse($path);
 
-            if ($query->area() !== null || $query->statuses() !== [] || $query->types() !== [] || $query->authorities() !== []) {
+            if ($query->areas() !== [] || $query->statuses() !== [] || $query->types() !== [] || $query->authorities() !== []) {
                 $canonical = ltrim($this->mapper->build($query), '/');
                 if ($canonical !== $path) {
                     return redirect('/'.$canonical, 301);
