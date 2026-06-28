@@ -10,8 +10,10 @@ use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Tests\Support\RequiresMeilisearch;
 use Tests\TestCase;
 
+#[RequiresMeilisearch]
 class RoadworkFacetValuesTest extends TestCase
 {
     use RefreshDatabase;
@@ -31,7 +33,9 @@ class RoadworkFacetValuesTest extends TestCase
 
     protected function tearDown(): void
     {
-        Roadwork::removeAllFromSearch();
+        if (! $this->meilisearchUnavailableForThisTest()) {
+            Roadwork::removeAllFromSearch();
+        }
 
         parent::tearDown();
     }

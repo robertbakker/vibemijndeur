@@ -16,15 +16,19 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\RequiresMeilisearch;
 use Tests\TestCase;
 
+#[RequiresMeilisearch]
 class SuggestionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     protected function tearDown(): void
     {
-        Roadwork::removeAllFromSearch();
+        if (! $this->meilisearchUnavailableForThisTest()) {
+            Roadwork::removeAllFromSearch();
+        }
 
         parent::tearDown();
     }

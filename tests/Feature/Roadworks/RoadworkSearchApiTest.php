@@ -10,6 +10,7 @@ use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Tests\Support\RequiresMeilisearch;
 use Tests\TestCase;
 
 /**
@@ -17,6 +18,7 @@ use Tests\TestCase;
  * prefixed index (see phpunit.xml) and waits out Meilisearch's asynchronous
  * indexing before asserting.
  */
+#[RequiresMeilisearch]
 class RoadworkSearchApiTest extends TestCase
 {
     use RefreshDatabase;
@@ -46,7 +48,9 @@ class RoadworkSearchApiTest extends TestCase
 
     protected function tearDown(): void
     {
-        Roadwork::removeAllFromSearch();
+        if (! $this->meilisearchUnavailableForThisTest()) {
+            Roadwork::removeAllFromSearch();
+        }
 
         parent::tearDown();
     }

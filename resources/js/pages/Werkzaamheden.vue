@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import {
+    AutocompleteAnchor,
+    AutocompleteContent,
+    AutocompleteEmpty,
+    AutocompleteInput,
+    AutocompleteItem,
+    AutocompletePortal,
+    AutocompleteRoot,
+    AutocompleteViewport,
+} from 'reka-ui';
+import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { suggest } from '@/routes/api';
 
 defineOptions({ layout: AppLayout });
 
@@ -17,6 +28,41 @@ const props = defineProps<{
 const qInput = ref(props.filters.q);
 const sortSel = ref(props.filters.sort);
 const layout = ref<'list' | 'grid'>('list');
+const open = ref(false);
+const suggestions = ref<App.Data.Suggestion[]>([]);
+
+// Debounced typeahead against /api/suggest. requestId guards against a slow
+// earlier response overwriting a newer one (last-write-wins by keystroke).
+let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let requestId = 0;
+
+watch(qInput, (term) => {
+    clearTimeout(debounceTimer);
+    const query = term.trim();
+    if (query.length < 2) {
+        suggestions.value = [];
+        open.value = false;
+        return;
+    }
+    debounceTimer = setTimeout(async () => {
+        const id = ++requestId;
+        const response = await fetch(
+            suggest.url({ query: { q: query, limit: 8 } }),
+            { headers: { Accept: 'application/json' } },
+        );
+        const data: { suggestions?: App.Data.Suggestion[] } =
+            await response.json();
+        if (id !== requestId) {
+            return;
+        }
+        suggestions.value = data.suggestions ?? [];
+        open.value = suggestions.value.length > 0;
+    }, 180);
+});
+
+function goToSuggestion(suggestion: App.Data.Suggestion): void {
+    router.visit(suggestion.url);
+}
 
 const groupOrder = ['status', 'gemeente', 'provincie', 'type', 'authority'];
 const facetGroups = computed(() =>
@@ -123,19 +169,60 @@ const chips = computed(() => {
                 straat raakt.
             </p>
             <form class="flex flex-wrap gap-2.5" @submit.prevent="applyQuery">
-                <div
-                    class="flex min-w-[280px] flex-1 gap-2.5 rounded-[11px] bg-white p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.2)]"
+                <AutocompleteRoot
+                    v-model="qInput"
+                    v-model:open="open"
+                    :ignore-filter="true"
+                    class="flex min-w-[280px] flex-1"
                 >
-                    <div class="flex items-center pl-2.5 text-outline">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <input
-                        v-model="qInput"
-                        type="text"
-                        placeholder="Zoek op straat of soort werk"
-                        class="flex-1 bg-transparent px-1.5 py-2.5 text-[15px] text-on-surface outline-none"
+                    <AutocompleteAnchor
+                        class="flex w-full gap-2.5 rounded-[11px] bg-white p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.2)]"
                     >
-                </div>
+                        <div class="flex items-center pl-2.5 text-outline">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <AutocompleteInput
+                            aria-label="Zoek op straat of plaats"
+                            placeholder="Bijv. Lindengracht, Amsterdam"
+                            class="flex-1 bg-transparent px-1.5 py-2.5 text-[15px] text-on-surface outline-none"
+                            @keydown.enter.prevent="!open && applyQuery()"
+                        />
+                    </AutocompleteAnchor>
+
+                    <AutocompletePortal>
+                        <AutocompleteContent
+                            position="popper"
+                            :side-offset="8"
+                            class="z-50 max-h-[320px] w-[var(--reka-popper-anchor-width)] overflow-hidden overflow-y-auto rounded-xl border border-outline-variant bg-white py-1.5 shadow-[0_18px_44px_rgba(10,30,60,0.22)]"
+                        >
+                            <AutocompleteViewport>
+                                <AutocompleteEmpty
+                                    class="px-4 py-3 text-[14px] text-on-surface-variant"
+                                >
+                                    Geen plaatsen gevonden.
+                                </AutocompleteEmpty>
+                                <AutocompleteItem
+                                    v-for="suggestion in suggestions"
+                                    :key="suggestion.url"
+                                    :value="suggestion.label"
+                                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-[15px] text-on-surface data-[highlighted]:bg-surface-container-low"
+                                    @select="goToSuggestion(suggestion)"
+                                >
+                                    <i
+                                        class="fa-solid fa-location-dot w-4 text-center text-[13px] text-outline"
+                                    ></i>
+                                    <span class="flex-1 truncate font-semibold"
+                                        >{{ suggestion.label }}</span
+                                    >
+                                    <span
+                                        class="text-[12px] font-medium text-on-surface-variant"
+                                        >{{ suggestion.count }}</span
+                                    >
+                                </AutocompleteItem>
+                            </AutocompleteViewport>
+                        </AutocompleteContent>
+                    </AutocompletePortal>
+                </AutocompleteRoot>
                 <button
                     type="submit"
                     class="rounded-[10px] bg-secondary-container px-6 text-[15px] font-bold text-on-secondary-container"
