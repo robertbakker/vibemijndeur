@@ -25,17 +25,16 @@ class CanonicalPathTest extends TestCase
         $this->assertSame('amsterdam', CanonicalPath::for($ams));
     }
 
-    public function test_ambiguous_gemeente_keeps_province_prefix(): void
+    public function test_globally_unique_qualified_slug_returns_itself(): void
     {
+        // Slugs are globally unique now (AreaSlugGenerator qualifies collisions),
+        // so the canonical path is always the single slug segment — never nested.
         $nh = Slug::factory()->create(['slug' => 'noord-holland', 'parent_id' => null]);
-        $li = Slug::factory()->create(['slug' => 'limburg', 'parent_id' => null]);
-        $bergenNh = Slug::factory()->create([
-            'slug' => 'bergen', 'parent_id' => $nh->id, 'sluggable_id' => Gemeente::factory(),
-        ]);
-        Slug::factory()->create([
-            'slug' => 'bergen', 'parent_id' => $li->id, 'sluggable_id' => Gemeente::factory(),
+        $bergen = Slug::factory()->create([
+            'slug' => 'bergen-limburg', 'parent_id' => $nh->id,
+            'sluggable_id' => Gemeente::factory(),
         ]);
 
-        $this->assertSame('noord-holland/bergen', CanonicalPath::for($bergenNh));
+        $this->assertSame('bergen-limburg', CanonicalPath::for($bergen));
     }
 }
