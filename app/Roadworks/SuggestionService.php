@@ -94,7 +94,7 @@ final class SuggestionService
         $suggestions = [];
         foreach ($model::query()->where('name', $value)->get() as $area) {
             $query = new ListingQuery;
-            $query->setArea($facet, (int) $area->getKey(), (string) $area->name);
+            $query->addArea($facet, (int) $area->getKey(), (string) $area->name);
             try {
                 $suggestions[] = new Suggestion($facet, $value, $this->mapper->build($query), $count);
             } catch (ModelNotFoundException) {
