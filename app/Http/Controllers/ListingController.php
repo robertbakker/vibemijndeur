@@ -65,7 +65,7 @@ class ListingController extends Controller
 
             $roadwork = Roadwork::query()
                 ->withRepresentativePoint()
-                ->with(['currentSlug', 'gemeenten', 'provincies'])
+                ->with(['currentSlug', 'gemeenten', 'wijken', 'provincies'])
                 ->findOrFail($resolution->roadworkId);
 
             $project = ProjectDetail::fromModel($roadwork);

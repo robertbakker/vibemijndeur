@@ -38,7 +38,11 @@ class ProjectPageTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Projecten/Show')
                 ->where('project.title', 'GAS Hoofdstraat')
+                ->where('project.description', 'Kabels / Leidingen, GAS Hoofdstraat.')
                 ->where('project.authority', "Gemeente 's-Gravenhage")
+                ->where('project.severityLabel', 'Hoog')
+                ->where('project.hindranceLabel', 'Hinder onbekend')
+                ->where('project.locationLabel', "Gemeente 's-Gravenhage")
                 ->where('project.slug', 's-gravenhage-gas-hoofdstraat')
                 ->whereNot('project.latitude', null)
                 ->whereNot('project.longitude', null)

@@ -12,9 +12,9 @@ use Spatie\LaravelData\Data;
 
 /**
  * A single roadwork reshaped for the project detail page. Fields Melvin
- * provides (title, dates, authority, location) are populated from the model;
- * the accessibility list uses generic, status-aware copy where the source has
- * no structured bereikbaarheid data.
+ * provides (title, dates, authority, location, hindrance, severity) are
+ * populated from the model; the accessibility copy is phrased from the
+ * hindrance class where the source has no structured bereikbaarheid data.
  *
  * @phpstan-type AccessItem array{icon: string, title: string, text: string}
  */
@@ -41,6 +41,9 @@ class ProjectDetail extends Data
         public int $progress,
         public ?string $authority,
         public string $locationLabel,
+        public string $hindranceLabel,
+        public int $hindranceLevel,
+        public string $severityLabel,
         public ?float $latitude,
         public ?float $longitude,
         public string $markerColor,
@@ -58,6 +61,7 @@ class ProjectDetail extends Data
         $status = RoadworkStatus::for($roadwork);
         $palette = $status->palette();
         $type = RoadworkType::for($roadwork);
+        $hindrance = Hindrance::for($roadwork);
 
         return new self(
             id: $roadwork->id,
@@ -76,7 +80,10 @@ class ProjectDetail extends Data
             phaseLabel: self::phaseLabel($status),
             progress: self::progress($roadwork, $status),
             authority: $roadwork->road_authority,
-            locationLabel: $roadwork->road_authority ?? 'Nederland',
+            locationLabel: self::location($roadwork),
+            hindranceLabel: $hindrance->label(),
+            hindranceLevel: $hindrance->level(),
+            severityLabel: Severity::for($roadwork)->label(),
             latitude: self::coordinate($roadwork, 'lat'),
             longitude: self::coordinate($roadwork, 'lng'),
             markerColor: $palette['markerColor'],
@@ -85,18 +92,57 @@ class ProjectDetail extends Data
             bannerBg: $palette['bannerBg'],
             bannerText: $palette['bannerText'],
             ringColor: $palette['ringColor'],
-            access: self::access($status),
+            access: self::access($status, $hindrance),
             contact: self::contact($roadwork),
         );
     }
 
+    /**
+     * A readable "wat gaat er gebeuren" line built from Melvin's
+     * `causeDescription` (a comma-packed `category, subtype, vrije tekst` field),
+     * prefixed with the translated `causeType` for context.
+     */
     private static function description(Roadwork $roadwork): string
     {
-        $parts = RoadworkTitle::parts($roadwork);
+        $cause = self::cleanCause(data_get($roadwork->feature, 'situation.properties.causeDescription'));
+        $type = self::causeTypeLabel(data_get($roadwork->feature, 'situation.properties.causeType'));
 
-        return $parts !== []
-            ? implode(' · ', $parts)
-            : 'Voor dit project is nog geen uitgebreide omschrijving beschikbaar.';
+        return match (true) {
+            $cause !== '' && $type !== null => "{$type}: {$cause}.",
+            $cause !== '' => "{$cause}.",
+            $type !== null => "{$type}.",
+            default => 'Voor dit project is nog geen uitgebreide omschrijving beschikbaar.',
+        };
+    }
+
+    /**
+     * Collapse the comma-/pipe-packed `causeDescription` into a readable phrase:
+     * trim each segment, drop the empties Melvin leaves between fields, dedupe,
+     * and re-join with commas.
+     */
+    private static function cleanCause(mixed $raw): string
+    {
+        if (! is_string($raw) || trim($raw) === '') {
+            return '';
+        }
+
+        $segments = array_filter(array_map('trim', preg_split('/[,|]/', $raw) ?: []));
+
+        return implode(', ', array_unique($segments));
+    }
+
+    /**
+     * Melvin's DATEX `causeType` as a Dutch lead-in. `other` and unknown types
+     * carry no useful context, so they yield null.
+     */
+    private static function causeTypeLabel(mixed $causeType): ?string
+    {
+        return match ($causeType) {
+            'roadMaintenance' => 'Wegonderhoud',
+            'constructionWork' => 'Bouwwerkzaamheden',
+            'publicEvent' => 'Evenement',
+            default => null,
+        };
     }
 
     private static function period(Roadwork $roadwork): string
@@ -172,12 +218,13 @@ class ProjectDetail extends Data
     }
 
     /**
-     * Generic, status-aware bereikbaarheid items. Melvin has no structured
-     * accessibility data, so these communicate the common situation per state.
+     * Bereikbaarheid items. Melvin has no structured accessibility data, so the
+     * motor-vehicle line is phrased from the {@see Hindrance} class (the only
+     * real impact signal the source provides); the rest stays status-aware.
      *
      * @return list<AccessItem>
      */
-    private static function access(RoadworkStatus $status): array
+    private static function access(RoadworkStatus $status, Hindrance $hindrance): array
     {
         if ($status === RoadworkStatus::Done) {
             return [
@@ -190,10 +237,43 @@ class ProjectDetail extends Data
 
         return [
             ['icon' => 'fa-person-walking', 'title' => 'Te voet — ja', 'text' => 'Woningen blijven te voet bereikbaar.'],
-            ['icon' => 'fa-car', 'title' => 'Auto — let op', 'text' => 'Mogelijk een afsluiting of omleiding; volg de borden ter plaatse.'],
+            self::carAccess($hindrance),
             ['icon' => 'fa-square-parking', 'title' => 'Parkeren', 'text' => 'Tijdelijk kunnen parkeervakken zijn opgeheven.'],
             ['icon' => 'fa-trash-can', 'title' => 'Afval', 'text' => 'De inzameling verloopt zoveel mogelijk zoals gebruikelijk.'],
         ];
+    }
+
+    /**
+     * The motor-vehicle bereikbaarheid line, scaled to the hindrance class.
+     *
+     * @return AccessItem
+     */
+    private static function carAccess(Hindrance $hindrance): array
+    {
+        return match ($hindrance) {
+            Hindrance::None => ['icon' => 'fa-car', 'title' => 'Auto — ja', 'text' => 'Nauwelijks hinder; de straat blijft vrijwel normaal bereikbaar.'],
+            Hindrance::Limited => ['icon' => 'fa-car', 'title' => 'Auto — let op', 'text' => 'Beperkte hinder; mogelijk een korte stremming. Volg de borden ter plaatse.'],
+            Hindrance::Moderate => ['icon' => 'fa-car', 'title' => 'Auto — let op', 'text' => 'Matige hinder; reken op een omleiding. Volg de borden ter plaatse.'],
+            Hindrance::Severe, Hindrance::Extreme => ['icon' => 'fa-car', 'title' => 'Auto — beperkt', 'text' => 'Ernstige hinder; een afsluiting is waarschijnlijk. Houd rekening met omrijden.'],
+            Hindrance::Unknown => ['icon' => 'fa-car', 'title' => 'Auto — let op', 'text' => 'Mogelijk een afsluiting of omleiding; volg de borden ter plaatse.'],
+        };
+    }
+
+    /**
+     * "Wijk, Gemeente" from the CBS areas this roadwork is linked to, falling
+     * back to gemeente alone, then the wegbeheerder, then the country.
+     */
+    private static function location(Roadwork $roadwork): string
+    {
+        $gemeente = $roadwork->relationLoaded('gemeenten') ? $roadwork->gemeenten->first()?->name : null;
+        $wijk = $roadwork->relationLoaded('wijken') ? $roadwork->wijken->first()?->name : null;
+
+        return match (true) {
+            $wijk !== null && $gemeente !== null => "{$wijk}, {$gemeente}",
+            $gemeente !== null => $gemeente,
+            $roadwork->road_authority !== null => $roadwork->road_authority,
+            default => 'Nederland',
+        };
     }
 
     private static function contact(Roadwork $roadwork): string
