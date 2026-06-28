@@ -33,3 +33,4 @@ yarn-error.log
 /.claude
 /resources/js/types/generated.d.ts
 /resources/js/types/typescript-transformer-manifest.json
+/.crush
