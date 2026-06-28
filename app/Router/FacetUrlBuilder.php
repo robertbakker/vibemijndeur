@@ -8,6 +8,8 @@ use App\Data\FacetOption;
 use App\Models\Gemeente;
 use App\Models\Provincie;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Turns Meilisearch facet rows into {@see FacetOption} DTOs, each carrying the
@@ -32,12 +34,27 @@ final class FacetUrlBuilder
         $out = [];
         foreach ($rawOptions as $raw) {
             $toggled = $this->toggle($current, $dimension, $raw['key'], $raw['checked']);
+
+            try {
+                $url = $this->mapper->build($toggled);
+            } catch (ModelNotFoundException) {
+                // An area facet value whose area has no current slug can't be
+                // linked to a pretty URL; skip the option rather than 404 the
+                // whole listing (mirrors SuggestionService's handling).
+                Log::warning('listing facet: area has no current slug', [
+                    'dimension' => $dimension,
+                    'value' => $raw['key'],
+                ]);
+
+                continue;
+            }
+
             $out[] = new FacetOption(
                 key: $raw['key'],
                 label: $raw['label'],
                 count: $raw['count'],
                 checked: $raw['checked'],
-                url: $this->mapper->build($toggled),
+                url: $url,
                 dot: $raw['dot'] ?? null,
             );
         }

@@ -57,4 +57,25 @@ class FacetUrlBuilderTest extends TestCase
         $this->assertSame('/gepland', $options[0]->url);
         $this->assertTrue($options[0]->checked);
     }
+
+    public function test_it_skips_area_options_whose_area_has_no_current_slug(): void
+    {
+        // Utrecht has a current slug; Zeeland (no slug) would throw a
+        // ModelNotFoundException while building its toggle URL and must be
+        // skipped rather than 404 the whole listing.
+        $utrecht = Provincie::factory()->create(['name' => 'Utrecht']);
+        Slug::factory()->create([
+            'slug' => 'utrecht', 'parent_id' => null,
+            'sluggable_type' => $utrecht->getMorphClass(), 'sluggable_id' => $utrecht->id,
+        ]);
+        Provincie::factory()->create(['name' => 'Zeeland']);
+
+        $options = app(FacetUrlBuilder::class)->options(new ListingQuery, 'provincie', [
+            ['key' => 'Utrecht', 'label' => 'Utrecht', 'count' => 5, 'checked' => false],
+            ['key' => 'Zeeland', 'label' => 'Zeeland', 'count' => 2, 'checked' => false],
+        ]);
+
+        $this->assertCount(1, $options);
+        $this->assertSame('Utrecht', $options[0]->key);
+    }
 }
