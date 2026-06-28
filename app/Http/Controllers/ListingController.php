@@ -10,6 +10,12 @@ use App\Router\ListingUrlMapper;
 use App\Router\SegmentCursor;
 use App\Router\Segments\RoadworkSegment;
 use App\Router\UnmatchedSegmentException;
+use App\StructuredData\BreadcrumbListNode;
+use App\StructuredData\OrganizationNode;
+use App\StructuredData\PlaceNode;
+use App\StructuredData\SpecialAnnouncementNode;
+use App\StructuredData\StructuredData;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,6 +32,7 @@ class ListingController extends Controller
         private readonly ListingUrlMapper $mapper,
         private readonly RoadworkSegment $roadworkSegment,
         private readonly WerkzaamhedenController $werkzaamheden,
+        private readonly StructuredData $structuredData,
     ) {}
 
     public function __invoke(Request $request, string $path): Response|RedirectResponse
@@ -58,14 +65,43 @@ class ListingController extends Controller
 
             $roadwork = Roadwork::query()
                 ->withRepresentativePoint()
-                ->with('currentSlug')
+                ->with(['currentSlug', 'gemeenten', 'provincies'])
                 ->findOrFail($resolution->roadworkId);
 
+            $project = ProjectDetail::fromModel($roadwork);
+
+            $this->structuredData->push(SpecialAnnouncementNode::make(
+                $project->title,
+                $project->description,
+                url('/'.$project->slug),
+                $this->isoDate($roadwork->start_date),
+                $this->isoDate($roadwork->end_date),
+                PlaceNode::make(
+                    $project->locationLabel,
+                    $project->latitude,
+                    $project->longitude,
+                    $roadwork->gemeenten->first()?->name,
+                    $roadwork->provincies->first()?->name,
+                ),
+                OrganizationNode::make(),
+            ));
+
+            $this->structuredData->push(BreadcrumbListNode::make([
+                ['name' => 'Home', 'url' => url('/')],
+                ['name' => 'Werkzaamheden', 'url' => url('/kaart')],
+                ['name' => $project->locationLabel, 'url' => null],
+            ]));
+
             return Inertia::render('Projecten/Show', [
-                'project' => ProjectDetail::fromModel($roadwork),
+                'project' => $project,
             ]);
         }
 
         abort(404);
+    }
+
+    private function isoDate(mixed $value): ?string
+    {
+        return $value === null ? null : CarbonImmutable::parse((string) $value)->format('Y-m-d');
     }
 }
