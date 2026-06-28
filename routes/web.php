@@ -21,7 +21,11 @@ Route::get('/api/roadworks/{id}/geometry', RoadworkGeometryController::class)
     ->whereNumber('id')
     ->name('api.roadworks.geometry');
 
-Route::get('/api/suggest', SuggestController::class)->name('api.suggest');
+// Per-keystroke typeahead: throttle the public endpoint (each call fans
+// several Meilisearch facet searches + area-slug lookups).
+Route::get('/api/suggest', SuggestController::class)
+    ->middleware('throttle:120,1')
+    ->name('api.suggest');
 
 Route::get('/projecten/{id}', [ProjectController::class, 'redirectFromId'])
     ->whereNumber('id')

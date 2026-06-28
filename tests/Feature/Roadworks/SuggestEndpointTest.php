@@ -48,6 +48,17 @@ class SuggestEndpointTest extends TestCase
         $this->getJson('/api/suggest?q=rijks&limit=99')->assertUnprocessable();
     }
 
+    public function test_endpoint_is_rate_limited(): void
+    {
+        // Blank term short-circuits before Meilisearch, so this exercises only
+        // the throttle:120,1 middleware. The 121st request in the window is 429.
+        for ($request = 0; $request < 120; $request++) {
+            $this->getJson('/api/suggest?q=')->assertOk();
+        }
+
+        $this->getJson('/api/suggest?q=')->assertStatus(429);
+    }
+
     private function index(string $sourceId, string $authority): void
     {
         $point = ['type' => 'Point', 'coordinates' => [5.1, 52.0]];
