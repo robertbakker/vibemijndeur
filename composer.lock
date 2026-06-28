@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e6febfe996c8ad2478c10916b5e0208",
+    "content-hash": "128bccbdf0673156980edb9488452ac4",
     "packages": [
         {
             "name": "brick/math",
@@ -2295,6 +2295,76 @@
             "time": "2026-03-08T20:05:35+00:00"
         },
         {
+            "name": "manticoresoftware/manticoresearch-php",
+            "version": "3.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/manticoresoftware/manticoresearch-php.git",
+                "reference": "02950b0f73ba8ad72d3f48bed4471b582b87ae8d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/manticoresoftware/manticoresearch-php/zipball/02950b0f73ba8ad72d3f48bed4471b582b87ae8d",
+                "reference": "02950b0f73ba8ad72d3f48bed4471b582b87ae8d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^7.4|^8.0",
+                "php-http/discovery": "^1.14",
+                "psr/log": "^1.1 || ^2.0 || ^3.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "*",
+                "phpstan/phpstan": "^1.4",
+                "phpunit/phpunit": ">=7.5 || ^9.6",
+                "slevomat/coding-standard": "^7.0",
+                "squizlabs/php_codesniffer": "^3.7"
+            },
+            "suggest": {
+                "ext-curl": "*",
+                "guzzlehttp/psr7": ">=1.6",
+                "monolog/monolog": "*",
+                "php-http/curl-client": ">=1.7",
+                "php-http/httplug": "^1.1",
+                "php-http/message": "^1.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Manticoresearch\\": "src/Manticoresearch/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Manticore Software",
+                    "email": "contact@manticoresearch.com",
+                    "homepage": "https://manticoresearch.com/"
+                },
+                {
+                    "name": "Adrian Nuta",
+                    "email": "adriannuta@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "PHP Client for Manticore Search",
+            "keywords": [
+                "client",
+                "manticoresearch",
+                "search"
+            ],
+            "support": {
+                "chat": "https://slack.manticoresearch.com/",
+                "issues": "https://github.com/manticoresoftware/manticoresearch-php/issues",
+                "source": "https://github.com/manticoresoftware/manticoresearch-php/"
+            },
+            "time": "2024-10-31T10:38:53+00:00"
+        },
+        {
             "name": "meilisearch/meilisearch-php",
             "version": "v1.16.1",
             "source": {
@@ -3950,6 +4020,67 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.2"
             },
             "time": "2025-12-14T04:43:48+00:00"
+        },
+        {
+            "name": "romanstruk/manticore-scout-engine",
+            "version": "8.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RomanStruk/manticore-scout-engine.git",
+                "reference": "16dccdc90a993eaf6d20883398d0c5a059341b92"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RomanStruk/manticore-scout-engine/zipball/16dccdc90a993eaf6d20883398d0c5a059341b92",
+                "reference": "16dccdc90a993eaf6d20883398d0c5a059341b92",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-pdo": "*",
+                "illuminate/support": "~13",
+                "laravel/scout": "^11.0",
+                "manticoresoftware/manticoresearch-php": "^3.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^11.0",
+                "phpunit/phpunit": "^12.5.12"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "RomanStruk\\ManticoreScoutEngine\\ManticoreServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "RomanStruk\\ManticoreScoutEngine\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roman",
+                    "email": "romanuch4@gmail.com"
+                }
+            ],
+            "description": "Laravel Manticore Scout Engine",
+            "keywords": [
+                "laravel",
+                "manticore",
+                "scout"
+            ],
+            "support": {
+                "issues": "https://github.com/RomanStruk/manticore-scout-engine/issues",
+                "source": "https://github.com/RomanStruk/manticore-scout-engine/tree/8.0.0"
+            },
+            "time": "2026-03-19T21:05:43+00:00"
         },
         {
             "name": "spatie/laravel-data",

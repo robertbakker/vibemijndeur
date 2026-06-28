@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Roadworks;
 
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -53,7 +54,7 @@ final class PopularGemeenten
         ['label' => 'Leeuwarden', 'gemeente' => 'Leeuwarden'],
     ];
 
-    public function __construct(private readonly RoadworkSearch $search) {}
+    public function __construct(private readonly RoadworkSearchEngine $search) {}
 
     /**
      * The 24 municipalities with their live roadwork counts, cached for an hour.

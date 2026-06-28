@@ -13,6 +13,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "meilisearch/meilisearch-php": "^1.16",
+        "romanstruk/manticore-scout-engine": "^8.0",
         "spatie/laravel-data": "^4.23"
     },
     "require-dev": {

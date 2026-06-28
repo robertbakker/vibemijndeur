@@ -6,6 +6,9 @@ use App\Events\RoadworkSaved;
 use App\Listeners\LinkRoadworkAreas;
 use App\Melvin\Client;
 use App\Melvin\OAuth2Client;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
+use App\Roadworks\ManticoreRoadworkSearch;
+use App\Roadworks\RoadworkSearch;
 use App\Router\ListingUrlMapper;
 use App\Router\Segments\AreaSegment;
 use App\Router\Segments\AuthoritySegment;
@@ -48,6 +51,15 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->scoped(StructuredData::class);
+
+        // Resolve the roadworks search engine by config so Meilisearch (Scout)
+        // and Manticore can be A/B'd via ROADWORK_SEARCH_ENGINE. The branch
+        // delegates through the container (not `new`) so mocks of the concrete
+        // engine in tests are still honored.
+        $this->app->bind(RoadworkSearchEngine::class, fn ($app): RoadworkSearchEngine => match (config('roadwork.search_engine')) {
+            'manticore' => $app->make(ManticoreRoadworkSearch::class),
+            default => $app->make(RoadworkSearch::class),
+        });
 
         $this->registerListingRouter();
     }

@@ -9,6 +9,7 @@ use App\Models\Buurt;
 use App\Models\Gemeente;
 use App\Models\Provincie;
 use App\Models\Wijk;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use App\Router\ListingQuery;
 use App\Router\ListingUrlMapper;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +41,7 @@ final class SuggestionService
     private const PER_FACET = 20;
 
     public function __construct(
-        private readonly RoadworkSearch $search,
+        private readonly RoadworkSearchEngine $search,
         private readonly ListingUrlMapper $mapper,
     ) {}
 

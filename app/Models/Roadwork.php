@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Actions\LinkRoadworkToArea;
 use App\Data\RoadworkStatus;
 use App\Roadworks\Data\RoadworkDocument;
+use App\Roadworks\ManticoreRoadworkSearch;
 use App\Roadworks\RoadworkGeometry;
 use App\Roadworks\RoadworkType;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
@@ -98,6 +99,90 @@ class Roadwork extends Model
     public function shouldBeSearchable(): bool
     {
         return $this->published !== false;
+    }
+
+    /**
+     * Manticore table schema (mirrors {@see toSearchableArray()} fields). Used
+     * by the Manticore A/B engine ({@see ManticoreRoadworkSearch})
+     * and the `manticore:build-roadworks` builder, never by Meili/Scout. `_geo`
+     * is split into `lat`/`lng` floats (for GEODIST); `geometry` is stored JSON,
+     * returned but never matched/filtered.
+     *
+     * @return array{fields: array<string, array{type: string}>, settings: array<string, string>}
+     */
+    public function scoutIndexMigration(): array
+    {
+        $string = ['type' => 'string'];
+
+        return [
+            'fields' => [
+                'description' => ['type' => 'text'],
+                'source' => $string,
+                'kind' => $string,
+                'severity' => $string,
+                'status' => $string,
+                'status_key' => $string,
+                'status_order' => ['type' => 'int'],
+                'work_type' => $string,
+                'hindrance' => $string,
+                'activity_type' => $string,
+                'road_authority' => $string,
+                'gemeente' => $string,
+                'gemeente_code' => $string,
+                'provincie' => $string,
+                'provincie_code' => $string,
+                'wijk' => $string,
+                'buurt' => $string,
+                'slug' => $string,
+                'published' => ['type' => 'int'],
+                'lat' => ['type' => 'float'],
+                'lng' => ['type' => 'float'],
+                'start_ts' => ['type' => 'bigint'],
+                'end_ts' => ['type' => 'bigint'],
+                'last_seen_ts' => ['type' => 'bigint'],
+                'geometry' => ['type' => 'json'],
+            ],
+            'settings' => [
+                'min_infix_len' => '2',
+            ],
+        ];
+    }
+
+    /**
+     * The {@see scoutIndexMigration()} document for this roadwork, as Manticore
+     * column => value (id returned separately). `_geo` is flattened to lat/lng,
+     * nullable scalars are coalesced to the column's zero/empty value, and the
+     * geometry feature list is JSON-encoded for the stored `json` column.
+     *
+     * @return array{id: int, attributes: array<string, mixed>}
+     */
+    public function toManticoreDocument(): array
+    {
+        $document = $this->toSearchableArray();
+
+        $strings = [
+            'source', 'kind', 'severity', 'status', 'status_key', 'work_type',
+            'hindrance', 'activity_type', 'road_authority', 'gemeente', 'gemeente_code',
+            'provincie', 'provincie_code', 'wijk', 'buurt', 'slug', 'description',
+        ];
+
+        $attributes = [];
+        foreach ($strings as $key) {
+            $attributes[$key] = (string) ($document[$key] ?? '');
+        }
+
+        $attributes['status_order'] = (int) ($document['status_order'] ?? 0);
+        $attributes['published'] = empty($document['published']) ? 0 : 1;
+        // Floats are passed as strings: the Manticore client binds float values
+        // as PDO::PARAM_INT (truncating them), so a string preserves precision.
+        $attributes['lat'] = sprintf('%.7f', (float) ($document['_geo']['lat'] ?? 0));
+        $attributes['lng'] = sprintf('%.7f', (float) ($document['_geo']['lng'] ?? 0));
+        $attributes['start_ts'] = (int) ($document['start_ts'] ?? 0);
+        $attributes['end_ts'] = (int) ($document['end_ts'] ?? 0);
+        $attributes['last_seen_ts'] = (int) ($document['last_seen_ts'] ?? 0);
+        $attributes['geometry'] = json_encode($document['geometry'] ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
+
+        return ['id' => (int) $document['id'], 'attributes' => $attributes];
     }
 
     /**

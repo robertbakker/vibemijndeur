@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Roadworks;
 
 use App\Models\Roadwork;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use Meilisearch\Contracts\FacetSearchQuery;
 use Meilisearch\Endpoints\Indexes;
 use Meilisearch\Search\FacetSearchResult;
@@ -17,7 +18,7 @@ use Meilisearch\Search\FacetSearchResult;
  * response via `->raw()` — `->get()` would hydrate models but discard
  * `facetDistribution` and the per-hit `_geoDistance`.
  */
-class RoadworkSearch
+class RoadworkSearch implements RoadworkSearchEngine
 {
     /**
      * The small per-hit fields needed to render a marker. Requested explicitly

@@ -17,6 +17,8 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            MANTICORE_HOST: manticore
+            MANTICORE_MYSQL_HOST: manticore
         volumes:
             - '.:/var/www/html'
         networks:
@@ -24,6 +26,7 @@ services:
         depends_on:
             - pgsql
             - meilisearch
+            - manticore
     pgsql:
         image: 'imresamu/postgis:18-3.6'
         ports:
@@ -68,6 +71,30 @@ services:
                 - 'http://127.0.0.1:7700/health'
             retries: 3
             timeout: 5s
+    manticore:
+        image: 'manticoresearch/manticore:latest'
+        ports:
+            - '${FORWARD_MANTICORE_MYSQL_PORT:-9306}:9306'
+            - '${FORWARD_MANTICORE_HTTP_PORT:-9308}:9308'
+        ulimits:
+            nofile:
+                soft: 65536
+                hard: 65536
+        environment:
+            EXTRA: 1
+        volumes:
+            - 'sail-manticore:/var/lib/manticore'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - wget
+                - '--no-verbose'
+                - '--spider'
+                - 'http://127.0.0.1:9308'
+            retries: 3
+            timeout: 5s
 networks:
     sail:
         driver: bridge
@@ -75,4 +102,6 @@ volumes:
     sail-pgsql:
         driver: local
     sail-meilisearch:
+        driver: local
+    sail-manticore:
         driver: local

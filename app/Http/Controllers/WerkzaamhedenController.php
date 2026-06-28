@@ -10,7 +10,7 @@ use App\Data\RoadworkStatus;
 use App\Models\Gemeente;
 use App\Models\Provincie;
 use App\Models\Roadwork;
-use App\Roadworks\RoadworkSearch;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use App\Router\FacetUrlBuilder;
 use App\Router\ListingQuery;
 use App\StructuredData\BreadcrumbListNode;
@@ -45,7 +45,7 @@ class WerkzaamhedenController extends Controller
     ];
 
     public function __construct(
-        private readonly RoadworkSearch $search,
+        private readonly RoadworkSearchEngine $search,
         private readonly StructuredData $structuredData,
         private readonly FacetUrlBuilder $facetUrls,
     ) {}

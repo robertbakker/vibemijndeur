@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Roadworks\RoadworkSearch;
+use App\Roadworks\Contracts\RoadworkSearchEngine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RoadworkSearchController extends Controller
 {
-    public function __construct(private readonly RoadworkSearch $search) {}
+    public function __construct(private readonly RoadworkSearchEngine $search) {}
 
     /**
      * Search roadworks for the interactive map. With a `bbox` the result is the
