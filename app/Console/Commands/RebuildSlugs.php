@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Router\AreaSlugGenerator;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Regenerate area slug rows in the unified slugs table (idempotent).')]
+#[Signature('slugs:rebuild')]
 class RebuildSlugs extends Command
 {
-    protected $signature = 'slugs:rebuild';
-
-    protected $description = 'Regenerate area slug rows in the unified slugs table (idempotent).';
-
     public function handle(AreaSlugGenerator $generator): int
     {
         $generator->rebuild();

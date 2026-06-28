@@ -16,14 +16,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
  * Rebuilds a saved roadwork's CBS area links at all five levels. Queued so bulk
  * imports are not blocked by the spatial work (runs inline under the sync queue).
  */
-final class LinkRoadworkAreas implements ShouldQueue
+final readonly class LinkRoadworkAreas implements ShouldQueue
 {
     public function __construct(
-        private readonly LinkRoadworkLandsdelen $landsdelen,
-        private readonly LinkRoadworkProvincies $provincies,
-        private readonly LinkRoadworkGemeenten $gemeenten,
-        private readonly LinkRoadworkWijken $wijken,
-        private readonly LinkRoadworkBuurten $buurten,
+        private LinkRoadworkLandsdelen $landsdelen,
+        private LinkRoadworkProvincies $provincies,
+        private LinkRoadworkGemeenten $gemeenten,
+        private LinkRoadworkWijken $wijken,
+        private LinkRoadworkBuurten $buurten,
     ) {}
 
     public function handle(RoadworkSaved $event): void

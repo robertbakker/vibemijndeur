@@ -12,6 +12,8 @@ use App\Roadworks\RoadworkGeometry;
 use App\Roadworks\RoadworkType;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -27,16 +29,61 @@ use Laravel\Scout\Searchable;
  * is a PostGIS geometry — read it as GeoJSON via {@see scopeWithCoordinatesGeoJson()}.
  *
  * @property RoadworkDocument $feature
+ * @property int $id
+ * @property string $source
+ * @property string $source_id
+ * @property string|null $kind
+ * @property string|null $severity
+ * @property string|null $status
+ * @property string|null $hindrance
+ * @property string|null $activity_type
+ * @property bool|null $published
+ * @property string|null $road_authority
+ * @property string|null $start_date
+ * @property string|null $end_date
+ * @property string|null $coordinates
+ * @property string $sys_period
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Buurt> $buurten
+ * @property-read int|null $buurten_count
+ * @property-read \App\Models\Slug|null $currentSlug
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Gemeente> $gemeenten
+ * @property-read int|null $gemeenten_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Landsdeel> $landsdelen
+ * @property-read int|null $landsdelen_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Provincie> $provincies
+ * @property-read int|null $provincies_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Wijk> $wijken
+ * @property-read int|null $wijken_count
+ * @method static Builder<static>|Roadwork nearby(float $latitude, float $longitude, float $meters)
+ * @method static Builder<static>|Roadwork newModelQuery()
+ * @method static Builder<static>|Roadwork newQuery()
+ * @method static Builder<static>|Roadwork query()
+ * @method static Builder<static>|Roadwork whereActivityType($value)
+ * @method static Builder<static>|Roadwork whereCoordinates($value)
+ * @method static Builder<static>|Roadwork whereEndDate($value)
+ * @method static Builder<static>|Roadwork whereFeature($value)
+ * @method static Builder<static>|Roadwork whereHindrance($value)
+ * @method static Builder<static>|Roadwork whereId($value)
+ * @method static Builder<static>|Roadwork whereKind($value)
+ * @method static Builder<static>|Roadwork wherePublished($value)
+ * @method static Builder<static>|Roadwork whereRoadAuthority($value)
+ * @method static Builder<static>|Roadwork whereSeverity($value)
+ * @method static Builder<static>|Roadwork whereSource($value)
+ * @method static Builder<static>|Roadwork whereSourceId($value)
+ * @method static Builder<static>|Roadwork whereStartDate($value)
+ * @method static Builder<static>|Roadwork whereStatus($value)
+ * @method static Builder<static>|Roadwork whereSysPeriod($value)
+ * @method static Builder<static>|Roadwork withAdministrativeAreas()
+ * @method static Builder<static>|Roadwork withCoordinatesGeoJson()
+ * @method static Builder<static>|Roadwork withRepresentativePoint()
+ * @mixin \Eloquent
  */
 #[Guarded(['id', 'sys_period'])]
+#[Table(name: 'roadworks')]
+#[WithoutTimestamps]
 class Roadwork extends Model
 {
     use Searchable;
-
-    protected $table = 'roadworks';
-
-    // Versioning is handled by the temporal `sys_period` column, not Eloquent timestamps.
-    public $timestamps = false;
 
     /**
      * The Meilisearch document. The geometry (Point/LineString/Polygon) is
@@ -356,6 +403,7 @@ class Roadwork extends Model
         ]));
     }
 
+    #[\Override]
     protected function casts(): array
     {
         return [

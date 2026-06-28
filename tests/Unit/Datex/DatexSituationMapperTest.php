@@ -29,7 +29,7 @@ class DatexSituationMapperTest extends TestCase
 
     public function test_maps_maintenance_with_rerouting(): void
     {
-        $inner = <<<XML
+        $inner = <<<'XML'
         <sit:situationRecord xsi:type="sit:MaintenanceWorks" id="r1">
           <sit:probabilityOfOccurrence>certain</sit:probabilityOfOccurrence>
           <sit:source><com:sourceName><com:values><com:value lang="nl">RWS Zuid</com:value></com:values></com:sourceName></sit:source>
@@ -53,7 +53,7 @@ class DatexSituationMapperTest extends TestCase
         </sit:situationRecord>
         XML;
 
-        $m = (new DatexSituationMapper())->map($this->situation($inner));
+        $m = (new DatexSituationMapper)->map($this->situation($inner));
 
         $this->assertNotNull($m);
         $this->assertSame('NDW03_42', $m->sourceId);
@@ -75,23 +75,23 @@ class DatexSituationMapperTest extends TestCase
 
     public function test_skips_non_real_records(): void
     {
-        $inner = <<<XML
+        $inner = <<<'XML'
         <sit:situationRecord xsi:type="sit:MaintenanceWorks" id="r1"/>
         XML;
 
-        $this->assertNull((new DatexSituationMapper())->map($this->situation($inner, 'test')));
+        $this->assertNull((new DatexSituationMapper)->map($this->situation($inner, 'test')));
     }
 
     public function test_public_event_maps_to_event_kind(): void
     {
-        $inner = <<<XML
+        $inner = <<<'XML'
         <sit:situationRecord xsi:type="sit:PublicEvent" id="r1">
           <com:informationStatus>real</com:informationStatus>
           <sit:cause><sit:causeType>publicEvent</sit:causeType></sit:cause>
         </sit:situationRecord>
         XML;
 
-        $m = (new DatexSituationMapper())->map($this->situation($inner));
+        $m = (new DatexSituationMapper)->map($this->situation($inner));
         $this->assertSame('EVENT', $m->kind);
     }
 }

@@ -20,7 +20,7 @@ final class RoadworkType
      *
      * @var list<array{0: list<string>, 1: string, 2: string}>
      */
-    private const RULES = [
+    private const array RULES = [
         [['gas'], 'Gas', 'fa-fire-flame-simple'],
         [['riol', 'riool'], 'Riool', 'fa-droplet'],
         [['water', 'drinkwater'], 'Water', 'fa-faucet-drip'],

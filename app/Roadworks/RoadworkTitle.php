@@ -24,7 +24,7 @@ final class RoadworkTitle
             return [];
         }
 
-        return array_values(array_unique(array_filter(array_map('trim', explode(',', $raw)))));
+        return array_values(array_unique(array_filter(array_map(trim(...), explode(',', $raw)))));
     }
 
     public static function for(Roadwork $roadwork): string

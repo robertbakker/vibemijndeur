@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Cache;
  * `limit: 0`), cached so the shared footer prop costs at most one Meilisearch
  * call per hour rather than one per request.
  */
-final class PopularGemeenten
+final readonly class PopularGemeenten
 {
-    private const CACHE_KEY = 'footer:popular-gemeenten';
+    private const string CACHE_KEY = 'footer:popular-gemeenten';
 
     /**
      * The 24 largest municipalities by population, paired with the CBS gemeente
@@ -27,7 +27,7 @@ final class PopularGemeenten
      *
      * @var list<array{label: string, gemeente: string}>
      */
-    public const CITIES = [
+    public const array CITIES = [
         ['label' => 'Amsterdam', 'gemeente' => 'Amsterdam'],
         ['label' => 'Rotterdam', 'gemeente' => 'Rotterdam'],
         ['label' => 'Den Haag', 'gemeente' => "'s-Gravenhage"],
@@ -54,7 +54,7 @@ final class PopularGemeenten
         ['label' => 'Leeuwarden', 'gemeente' => 'Leeuwarden'],
     ];
 
-    public function __construct(private readonly RoadworkSearchEngine $search) {}
+    public function __construct(private RoadworkSearchEngine $search) {}
 
     /**
      * The 24 municipalities with their live roadwork counts, cached for an hour.

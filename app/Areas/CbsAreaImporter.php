@@ -25,7 +25,7 @@ final class CbsAreaImporter
      *
      * @var array<string, array{layer: string, staging: string}>
      */
-    private const LEVELS = [
+    private const array LEVELS = [
         'landsdelen' => ['layer' => 'landsdeel_gegeneraliseerd', 'staging' => 'cbs_stg_landsdeel'],
         'provincies' => ['layer' => 'provincie_gegeneraliseerd', 'staging' => 'cbs_stg_provincie'],
         'gemeenten' => ['layer' => 'gemeente_gegeneraliseerd', 'staging' => 'cbs_stg_gemeente'],

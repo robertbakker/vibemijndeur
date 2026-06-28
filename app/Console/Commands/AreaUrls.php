@@ -8,14 +8,14 @@ use App\Models\Gemeente;
 use App\Models\Provincie;
 use App\Models\Slug;
 use App\Router\CanonicalPath;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('List canonical pretty URLs for all current area slugs.')]
+#[Signature('area:urls')]
 class AreaUrls extends Command
 {
-    protected $signature = 'area:urls';
-
-    protected $description = 'List canonical pretty URLs for all current area slugs.';
-
     public function handle(): int
     {
         $areaTypes = [(new Provincie)->getMorphClass(), (new Gemeente)->getMorphClass()];

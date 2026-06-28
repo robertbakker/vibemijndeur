@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\DB;
  * only on genuine content changes. Feed-presence timestamps are tracked in the
  * non-versioned `roadwork_seen` table so re-imports don't churn history.
  */
-final class RoadworkUpserter
+final readonly class RoadworkUpserter
 {
-    public function __construct(private readonly RoadworkSlugSynchronizer $slugs) {}
+    public function __construct(private RoadworkSlugSynchronizer $slugs) {}
 
-    private const PROMOTED = [
+    private const array PROMOTED = [
         'kind', 'severity', 'status', 'hindrance', 'activity_type',
         'published', 'road_authority', 'start_date', 'end_date',
     ];

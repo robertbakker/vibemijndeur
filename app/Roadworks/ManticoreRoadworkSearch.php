@@ -21,7 +21,7 @@ use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
  * `max_matches` is set high enough that facet counts and `total_found` cover the
  * full match set.
  */
-final class ManticoreRoadworkSearch implements RoadworkSearchEngine
+final readonly class ManticoreRoadworkSearch implements RoadworkSearchEngine
 {
     /**
      * The per-hit columns the map needs — mirrors the Meili `POINT_ATTRIBUTES`
@@ -29,12 +29,12 @@ final class ManticoreRoadworkSearch implements RoadworkSearchEngine
      *
      * @var list<string>
      */
-    private const POINT_COLUMNS = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', 'slug', 'lat', 'lng'];
+    private const array POINT_COLUMNS = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', 'slug', 'lat', 'lng'];
 
     /**
      * Keep all matched rows in scope for faceting/counting at this corpus size.
      */
-    private const MAX_MATCHES = '50000';
+    private const string MAX_MATCHES = '50000';
 
     private string $index;
 

@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class ManticoreRoadworkSearchTest extends TestCase
 {
-    private const INDEX = 'testing_roadworks';
+    private const string INDEX = 'testing_roadworks';
 
     private ManticoreRoadworkSearch $search;
 

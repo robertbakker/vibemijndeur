@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Roadwork;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Laravel\Scout\EngineManager;
 use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
@@ -16,12 +18,10 @@ use RomanStruk\ManticoreScoutEngine\Mysql\Builder;
  * roadwork using {@see Roadwork::toManticoreDocument()} — the same data Meili
  * indexes, so the two engines can be compared like for like.
  */
+#[Description('Build the Manticore roadworks index from the database')]
+#[Signature('manticore:build-roadworks {--chunk=500 : Rows loaded per batch}')]
 class BuildManticoreRoadworksIndex extends Command
 {
-    protected $signature = 'manticore:build-roadworks {--chunk=500 : Rows loaded per batch}';
-
-    protected $description = 'Build the Manticore roadworks index from the database';
-
     public function handle(EngineManager $engines): int
     {
         $model = new Roadwork;

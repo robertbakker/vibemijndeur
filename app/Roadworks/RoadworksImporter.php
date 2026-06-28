@@ -7,7 +7,6 @@ namespace App\Roadworks;
 use App\Melvin\Data\Feature;
 use App\Melvin\Data\FeatureCollection;
 use App\Melvin\Data\FeatureProperties;
-use App\Roadworks\RoadworkUpserter;
 
 /**
  * Imports a Melvin FeatureCollection into the `roadworks` table.
@@ -17,11 +16,9 @@ use App\Roadworks\RoadworkUpserter;
  * jsonb document. Rows are upserted on (source, source_id), so a re-import only
  * touches rows that actually changed — the temporal trigger records the history.
  */
-final class RoadworksImporter
+final readonly class RoadworksImporter
 {
-    public function __construct(private readonly RoadworkUpserter $upserter)
-    {
-    }
+    public function __construct(private RoadworkUpserter $upserter) {}
 
     public function import(FeatureCollection $collection): RoadworksImportResult
     {
@@ -68,8 +65,7 @@ final class RoadworksImporter
     }
 
     /**
-     * @param array{situation: Feature, properties: FeatureProperties, restrictions: list<Feature>, detours: list<Feature>} $group
-     *
+     * @param  array{situation: Feature, properties: FeatureProperties, restrictions: list<Feature>, detours: list<Feature>}  $group
      * @return bool true when a new row was inserted, false when an existing row was updated
      */
     private function upsert(array $group): bool
@@ -80,8 +76,8 @@ final class RoadworksImporter
         $point = $situation->geometry;
         $document = [
             'situation' => $situation->toArray(),
-            'restrictions' => array_map(static fn ($f) => $f->toArray(), $group['restrictions']),
-            'detours' => array_map(static fn ($f) => $f->toArray(), $group['detours']),
+            'restrictions' => array_map(static fn (Feature $f): array => $f->toArray(), $group['restrictions']),
+            'detours' => array_map(static fn (Feature $f): array => $f->toArray(), $group['detours']),
         ];
 
         return $this->upserter->upsert(

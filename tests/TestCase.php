@@ -33,7 +33,7 @@ abstract class TestCase extends BaseTestCase
             return;
         }
 
-        if (! self::meilisearchReachable()) {
+        if (! $this->meilisearchReachable()) {
             $this->markTestSkipped('Meilisearch is not available; skipping live search test.');
         }
     }
@@ -46,7 +46,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function meilisearchUnavailableForThisTest(): bool
     {
-        return $this->requiresMeilisearch() && ! self::meilisearchReachable();
+        return $this->requiresMeilisearch() && ! $this->meilisearchReachable();
     }
 
     private function requiresMeilisearch(): bool
@@ -59,14 +59,14 @@ abstract class TestCase extends BaseTestCase
 
         $method = $this->name();
 
-        if ($method !== '' && $class->hasMethod($method)) {
+        if ($class->hasMethod($method)) {
             return $class->getMethod($method)->getAttributes(RequiresMeilisearch::class) !== [];
         }
 
         return false;
     }
 
-    private static function meilisearchReachable(): bool
+    private function meilisearchReachable(): bool
     {
         if (self::$meilisearchReachable !== null) {
             return self::$meilisearchReachable;

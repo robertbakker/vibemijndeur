@@ -21,7 +21,7 @@ final class StatusSegment implements UrlSegment
         $statuses = [];
         foreach (explode(',', $segment) as $value) {
             $status = RoadworkStatus::fromSlug($value);
-            if ($status === null) {
+            if (! $status instanceof RoadworkStatus) {
                 return 0; // whole segment belongs to another handler
             }
             $statuses[] = $status;

@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
 final class AreaSegment implements UrlSegment
 {
     /** @var list<class-string> morph classes allowed as the first path segment */
-    public const ROOT_TYPES = [Landsdeel::class, Provincie::class, Gemeente::class];
+    public const array ROOT_TYPES = [Landsdeel::class, Provincie::class, Gemeente::class];
 
     public function match(SegmentCursor $cursor, ListingQuery $query): int
     {
@@ -37,12 +37,13 @@ final class AreaSegment implements UrlSegment
         }
 
         $consumed = 1;
+        $counter = count($segments);
 
         // Following segments: drill into children while every comma value
         // resolves as a child of the current resolved set.
-        for ($i = 1; $i < count($segments); $i++) {
+        for ($i = 1; $i < $counter; $i++) {
             $children = $this->resolveChildSegment($segments[$i], $resolved->pluck('id')->all());
-            if ($children === null) {
+            if (! $children instanceof Collection) {
                 break; // belongs to a status/type/authority handler
             }
             $resolved = $children;

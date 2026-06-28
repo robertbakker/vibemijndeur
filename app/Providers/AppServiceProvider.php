@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             AuthoritySegment::class,
         ], 'listing.segments');
 
-        $this->app->singleton(ListingUrlMapper::class, fn ($app) => new ListingUrlMapper(
+        $this->app->singleton(ListingUrlMapper::class, fn ($app): ListingUrlMapper => new ListingUrlMapper(
             segments: array_values(iterator_to_array($app->tagged('listing.segments'))),
             buildOrder: [
                 AreaSegment::class,

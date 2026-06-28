@@ -23,7 +23,7 @@ final class DatexFeedReader
     {
         [$uri, $tmp] = $this->resolve($urlOrPath);
 
-        $reader = new XMLReader();
+        $reader = new XMLReader;
         if (! $reader->open($uri)) {
             throw new RuntimeException("Unable to open DATEX feed: {$urlOrPath}");
         }
@@ -31,7 +31,7 @@ final class DatexFeedReader
         try {
             while ($reader->read()) {
                 if ($reader->nodeType === XMLReader::ELEMENT && $reader->localName === 'situation') {
-                    $doc = new DOMDocument();
+                    $doc = new DOMDocument;
                     $node = $reader->expand($doc);
                     if ($node !== false) {
                         $doc->appendChild($node);

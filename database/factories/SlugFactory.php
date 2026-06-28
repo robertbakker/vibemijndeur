@@ -16,7 +16,7 @@ class SlugFactory extends Factory
     public function definition(): array
     {
         return [
-            'slug' => $this->faker->unique()->slug(2),
+            'slug' => fake()->unique()->slug(2),
             'sluggable_type' => (new Gemeente)->getMorphClass(),
             'sluggable_id' => Gemeente::factory(),
             'parent_id' => null,

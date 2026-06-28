@@ -46,8 +46,8 @@ enum RoadworkStatus: string
         $end = $roadwork->end_date === null ? null : CarbonImmutable::parse((string) $roadwork->end_date);
 
         return match (true) {
-            $start !== null && $start->isFuture() => self::Planned,
-            $end !== null && $end->isPast() => self::Done,
+            $start instanceof CarbonImmutable && $start->isFuture() => self::Planned,
+            $end instanceof CarbonImmutable && $end->isPast() => self::Done,
             default => self::Active,
         };
     }

@@ -21,14 +21,14 @@ use Illuminate\Support\Facades\Log;
  * facet value becomes one or more {@see Suggestion}s linking to a pretty
  * listing URL (built via {@see ListingUrlMapper}).
  */
-final class SuggestionService
+final readonly class SuggestionService
 {
     /**
      * Area facets => the Eloquent model whose `name` the facet value resolves to.
      *
      * @var array<string, class-string<Model>>
      */
-    private const AREA_MODELS = [
+    private const array AREA_MODELS = [
         'gemeente' => Gemeente::class,
         'provincie' => Provincie::class,
         'wijk' => Wijk::class,
@@ -36,13 +36,13 @@ final class SuggestionService
     ];
 
     /** The facets searched, in display order. road_authority has no area model. */
-    private const FACETS = ['gemeente', 'provincie', 'wijk', 'buurt', 'road_authority'];
+    private const array FACETS = ['gemeente', 'provincie', 'wijk', 'buurt', 'road_authority'];
 
-    private const PER_FACET = 20;
+    private const int PER_FACET = 20;
 
     public function __construct(
-        private readonly RoadworkSearchEngine $search,
-        private readonly ListingUrlMapper $mapper,
+        private RoadworkSearchEngine $search,
+        private ListingUrlMapper $mapper,
     ) {}
 
     /**
@@ -120,10 +120,8 @@ final class SuggestionService
      */
     private function rank(array $suggestions, string $term): array
     {
-        usort($suggestions, function (Suggestion $a, Suggestion $b) use ($term): int {
-            return [$this->bucket($a->label, $term), -$a->count]
-                <=> [$this->bucket($b->label, $term), -$b->count];
-        });
+        usort($suggestions, fn (Suggestion $a, Suggestion $b): int => [$this->bucket($a->label, $term), -$a->count]
+            <=> [$this->bucket($b->label, $term), -$b->count]);
 
         return $suggestions;
     }

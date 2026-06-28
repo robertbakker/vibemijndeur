@@ -15,15 +15,15 @@ use Illuminate\Support\Facades\Log;
  * Turns Meilisearch facet rows into {@see FacetOption} DTOs, each carrying the
  * clean URL you land on after toggling that one value against the current query.
  */
-final class FacetUrlBuilder
+final readonly class FacetUrlBuilder
 {
     /** @var array<string, class-string<Model>> area dimension => model */
-    private const AREA_MODELS = [
+    private const array AREA_MODELS = [
         'gemeente' => Gemeente::class,
         'provincie' => Provincie::class,
     ];
 
-    public function __construct(private readonly ListingUrlMapper $mapper) {}
+    public function __construct(private ListingUrlMapper $mapper) {}
 
     /**
      * @param  list<array{key:string,label:string,count:int,checked:bool,dot?:string}>  $rawOptions

@@ -23,6 +23,5 @@ final readonly class MappedRoadwork
         public ?array $point,
         /** @var array<string, mixed> */
         public array $document,
-    ) {
-    }
+    ) {}
 }

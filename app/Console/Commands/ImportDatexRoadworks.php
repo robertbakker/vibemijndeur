@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Roadworks\Datex\DatexFeedReader;
 use App\Roadworks\Datex\DatexSituationMapper;
+use App\Roadworks\Datex\MappedRoadwork;
 use App\Roadworks\RoadworkUpserter;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Attributes\Description;
@@ -18,7 +19,7 @@ use Throwable;
 #[Description('Import roadworks & events from the NDW open DATEX planningsfeed')]
 class ImportDatexRoadworks extends Command
 {
-    private const FEED_URL = 'https://opendata.ndw.nu/planningsfeed_wegwerkzaamheden_en_evenementen.xml.gz';
+    private const string FEED_URL = 'https://opendata.ndw.nu/planningsfeed_wegwerkzaamheden_en_evenementen.xml.gz';
 
     public function handle(DatexFeedReader $reader, DatexSituationMapper $mapper, RoadworkUpserter $upserter): int
     {
@@ -32,7 +33,7 @@ class ImportDatexRoadworks extends Command
             foreach ($reader->read($source) as $situation) {
                 try {
                     $mapped = $mapper->map($situation);
-                    if ($mapped === null) {
+                    if (! $mapped instanceof MappedRoadwork) {
                         $skipped++;
 
                         continue;

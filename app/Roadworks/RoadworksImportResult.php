@@ -10,6 +10,5 @@ final readonly class RoadworksImportResult
         public int $created,
         public int $updated,
         public int $total,
-    ) {
-    }
+    ) {}
 }

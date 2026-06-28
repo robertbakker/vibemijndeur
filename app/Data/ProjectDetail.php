@@ -126,7 +126,7 @@ class ProjectDetail extends Data
             return '';
         }
 
-        $segments = array_filter(array_map('trim', preg_split('/[,|]/', $raw) ?: []));
+        $segments = array_filter(array_map(trim(...), preg_split('/[,|]/', $raw) ?: []));
 
         return implode(', ', array_unique($segments));
     }

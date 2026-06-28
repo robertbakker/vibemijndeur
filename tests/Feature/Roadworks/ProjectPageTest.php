@@ -35,7 +35,7 @@ class ProjectPageTest extends TestCase
 
         $this->get('/s-gravenhage-gas-hoofdstraat')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
                 ->component('Projecten/Show')
                 ->where('project.title', 'GAS Hoofdstraat')
                 ->where('project.description', 'Kabels / Leidingen, GAS Hoofdstraat.')

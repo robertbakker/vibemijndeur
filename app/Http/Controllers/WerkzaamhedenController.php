@@ -29,14 +29,14 @@ use Inertia\Response;
  */
 class WerkzaamhedenController extends Controller
 {
-    private const PER_PAGE = 24;
+    private const int PER_PAGE = 24;
 
-    private const MAX_FACET_OPTIONS = 12;
+    private const int MAX_FACET_OPTIONS = 12;
 
     /**
      * Facet group => the Meilisearch attribute it filters/counts on.
      */
-    private const FACETS = [
+    private const array FACETS = [
         'status' => 'status_key',
         'type' => 'work_type',
         'gemeente' => 'gemeente',

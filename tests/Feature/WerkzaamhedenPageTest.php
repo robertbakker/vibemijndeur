@@ -9,6 +9,7 @@ use App\Models\Provincie;
 use App\Models\Slug;
 use App\Roadworks\RoadworkSearch;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -45,7 +46,7 @@ class WerkzaamhedenPageTest extends TestCase
         });
 
         $this->get('/werkzaamheden')->assertInertia(
-            fn (Assert $page) => $page
+            fn (Assert $page): AssertableInertia => $page
                 ->component('Werkzaamheden')
                 ->where('facets.gemeente.options.0.key', 'Amsterdam')
                 ->where('facets.gemeente.options.0.url', '/amsterdam')

@@ -13,9 +13,9 @@ use ZipArchive;
  * a direct `.gpkg` path, a `.zip` archive path, or — with {@see download()} — the
  * ~591 MB archive fetched from CBS. Returns the absolute path to the `.gpkg`.
  */
-final class CbsArchive
+final readonly class CbsArchive
 {
-    public function __construct(private readonly string $workDir) {}
+    public function __construct(private string $workDir) {}
 
     /**
      * @throws RuntimeException when the source cannot be resolved to a year's gpkg

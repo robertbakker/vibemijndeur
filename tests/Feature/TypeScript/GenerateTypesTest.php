@@ -9,6 +9,12 @@ use Tests\TestCase;
 
 class GenerateTypesTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mockConsoleOutput = false;
+    }
+
     public function test_it_generates_typescript_for_frontend_dtos(): void
     {
         $output = resource_path('js/types/generated.d.ts');

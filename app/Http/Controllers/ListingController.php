@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Data\ProjectDetail;
 use App\Models\Roadwork;
 use App\Router\ListingUrlMapper;
+use App\Router\RoadworkResolution;
 use App\Router\SegmentCursor;
 use App\Router\Segments\RoadworkSegment;
 use App\Router\UnmatchedSegmentException;
@@ -58,7 +59,7 @@ class ListingController extends Controller
             array_values(array_filter(explode('/', trim($path, '/'))))
         ));
 
-        if ($resolution !== null) {
+        if ($resolution instanceof RoadworkResolution) {
             if ($resolution->redirectToSlug !== null) {
                 return redirect('/'.$resolution->redirectToSlug, 301);
             }

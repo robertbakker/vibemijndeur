@@ -29,8 +29,7 @@ class FeatureProperties extends Data
         public ?string $activityType = null,
         public ?string $name = null,
         public ?bool $published = null,
-    ) {
-    }
+    ) {}
 
     public function isSituation(): bool
     {

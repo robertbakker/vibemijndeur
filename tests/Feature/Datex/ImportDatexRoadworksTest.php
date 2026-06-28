@@ -30,14 +30,14 @@ class ImportDatexRoadworksTest extends TestCase
         $this->assertSame('RWS Zuid', $work->road_authority);
         $this->assertStringContainsString('6.127533', $work->g);
 
-        $feature = json_decode($work->feature, true);
+        $feature = json_decode((string) $work->feature, true);
         $line = $feature['detours'][0]['geometry'];
         $this->assertSame('LineString', $line['type']);
         $this->assertEqualsWithDelta(6.127, $line['coordinates'][0][0], 1e-6);
 
         $event = DB::selectOne("SELECT kind, feature FROM roadworks WHERE source_id='NDW03_200'");
         $this->assertSame('EVENT', $event->kind);
-        $this->assertSame('https://example.test/attachment/abc', json_decode($event->feature, true)['attachments'][0]['url']);
+        $this->assertSame('https://example.test/attachment/abc', json_decode((string) $event->feature, true)['attachments'][0]['url']);
     }
 
     public function test_reimport_is_idempotent_and_writes_history_on_change(): void

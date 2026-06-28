@@ -6,14 +6,14 @@ namespace App\Console\Commands;
 
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkSlugSynchronizer;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Generate current slugs for all roadworks (idempotent).')]
+#[Signature('roadworks:backfill-slugs')]
 class BackfillRoadworkSlugs extends Command
 {
-    protected $signature = 'roadworks:backfill-slugs';
-
-    protected $description = 'Generate current slugs for all roadworks (idempotent).';
-
     public function handle(RoadworkSlugSynchronizer $synchronizer): int
     {
         $count = 0;

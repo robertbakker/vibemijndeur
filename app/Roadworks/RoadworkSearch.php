@@ -27,7 +27,7 @@ class RoadworkSearch implements RoadworkSearchEngine
      *
      * @var list<string>
      */
-    private const POINT_ATTRIBUTES = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', 'slug', '_geo'];
+    private const array POINT_ATTRIBUTES = ['id', 'kind', 'severity', 'status', 'road_authority', 'description', 'slug', '_geo'];
 
     /**
      * Roadworks whose representative point is within `$meters` of a lat/lng,
@@ -154,13 +154,11 @@ class RoadworkSearch implements RoadworkSearchEngine
      */
     public function facetValues(string $facet, string $term, int $limit = 20): array
     {
-        $result = Roadwork::search('', function (Indexes $index) use ($facet, $term): FacetSearchResult {
-            return $index->facetSearch(
-                (new FacetSearchQuery)
-                    ->setFacetName($facet)
-                    ->setFacetQuery(trim($term)),
-            );
-        })->raw();
+        $result = Roadwork::search('', fn (Indexes $index): FacetSearchResult => $index->facetSearch(
+            (new FacetSearchQuery)
+                ->setFacetName($facet)
+                ->setFacetQuery(trim($term)),
+        ))->raw();
 
         $hits = $result instanceof FacetSearchResult
             ? $result->getFacetHits()

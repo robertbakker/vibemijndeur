@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
  * current slug and, when it differs, demotes the old current slug to a
  * historical redirect row and promotes (or reuses) the new one.
  */
-final class RoadworkSlugSynchronizer
+final readonly class RoadworkSlugSynchronizer
 {
-    public function __construct(private readonly RoadworkSlugger $slugger) {}
+    public function __construct(private RoadworkSlugger $slugger) {}
 
     public function sync(int $roadworkId): void
     {

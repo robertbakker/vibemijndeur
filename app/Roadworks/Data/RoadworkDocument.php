@@ -24,6 +24,5 @@ class RoadworkDocument extends Data
         public array $detours = [],
         /** @var list<array{url: string, description: ?string}> */
         public array $attachments = [],
-    ) {
-    }
+    ) {}
 }

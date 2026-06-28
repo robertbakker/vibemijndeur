@@ -8,7 +8,7 @@ use SimpleXMLElement;
 
 final class DatexSituationMapper
 {
-    private const NS = [
+    private const array NS = [
         'sit' => 'http://datex2.eu/schema/3/situation',
         'com' => 'http://datex2.eu/schema/3/common',
         'loc' => 'http://datex2.eu/schema/3/locationReferencing',
@@ -16,9 +16,11 @@ final class DatexSituationMapper
         'xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
     ];
 
-    private const SITUATION_TYPES = ['MaintenanceWorks', 'ConstructionWorks', 'PublicEvent'];
-    private const RESTRICTION_TYPES = ['RoadOrCarriagewayOrLaneManagement', 'SpeedManagement'];
-    private const DETOUR_TYPES = ['ReroutingManagement'];
+    private const array SITUATION_TYPES = ['MaintenanceWorks', 'ConstructionWorks', 'PublicEvent'];
+
+    private const array RESTRICTION_TYPES = ['RoadOrCarriagewayOrLaneManagement', 'SpeedManagement'];
+
+    private const array DETOUR_TYPES = ['ReroutingManagement'];
 
     public function map(SimpleXMLElement $situation): ?MappedRoadwork
     {
@@ -111,7 +113,8 @@ final class DatexSituationMapper
         foreach ($lists as $list) {
             $nums = preg_split('/\s+/', trim((string) $list)) ?: [];
             $coords = [];
-            for ($i = 0; $i + 1 < count($nums); $i += 2) {
+            $counter = count($nums);
+            for ($i = 0; $i + 1 < $counter; $i += 2) {
                 $coords[] = [(float) $nums[$i + 1], (float) $nums[$i]];
             }
             if (count($coords) >= 2) {

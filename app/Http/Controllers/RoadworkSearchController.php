@@ -46,7 +46,7 @@ class RoadworkSearchController extends Controller
         $limit = $includePoints || $includeGeometry ? 20000 : 0;
 
         if (isset($validated['bbox'])) {
-            [$west, $south, $east, $north] = array_map('floatval', explode(',', $validated['bbox']));
+            [$west, $south, $east, $north] = array_map(floatval(...), explode(',', $validated['bbox']));
             $raw = $this->search->withinBoundingBox($query, $north, $west, $south, $east, $facets, $filters, $limit, $includeGeometry);
         } else {
             $raw = $this->search->text($query, $facets, $filters, 50);

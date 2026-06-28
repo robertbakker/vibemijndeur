@@ -20,7 +20,7 @@ class FooterGemeentenTest extends TestCase
         ]));
 
         $this->get(route('kaart'))->assertInertia(
-            fn (AssertableInertia $page) => $page
+            fn (AssertableInertia $page): AssertableInertia => $page
                 ->has('popularGemeenten', count(PopularGemeenten::CITIES))
                 ->where('popularGemeenten.0', [
                     'label' => 'Amsterdam',
