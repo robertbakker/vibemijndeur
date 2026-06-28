@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { layers, namedFlavor } from '@protomaps/basemaps';
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MaterialIcon from '@/components/MaterialIcon.vue';
+import { buildMapStyle } from '@/lib/mapStyle';
 
 const props = defineProps<{
     roadworkId: number;
@@ -87,20 +87,7 @@ onMounted(async () => {
         scrollZoom: false,
         canvasContextAttributes: { antialias: true },
         attributionControl: { compact: true },
-        style: {
-            version: 8,
-            glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
-            sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/light',
-            sources: {
-                protomaps: {
-                    type: 'vector',
-                    url: 'pmtiles:///tiles/basemap-nl.pmtiles',
-                    attribution:
-                        '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
-                },
-            },
-            layers: layers('protomaps', namedFlavor('light'), { lang: 'nl' }),
-        },
+        style: buildMapStyle(),
     });
     map.value = instance;
 
