@@ -2,115 +2,51 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index } from '@/routes/werkzaamheden';
 
 defineOptions({ layout: AppLayout });
 
-interface FacetOption {
-    key: string;
-    label: string;
-    count: number;
-    checked: boolean;
-    dot?: string;
-}
-
 const props = defineProps<{
     results: App.Data.RoadworkCard[];
-    facets: {
-        status: FacetOption[];
-        type: FacetOption[];
-        gemeente: FacetOption[];
-        provincie: FacetOption[];
-        authority: FacetOption[];
-    };
-    filters: {
-        q: string;
-        status: string[];
-        type: string[];
-        gemeente: string[];
-        provincie: string[];
-        authority: string[];
-        sort: string;
-    };
+    facets: Record<string, App.Data.FacetGroup>;
+    filters: { q: string; sort: string };
     total: number;
     page: number;
     hasMore: boolean;
 }>();
 
 const qInput = ref(props.filters.q);
-const statusSel = ref<string[]>([...props.filters.status]);
-const typeSel = ref<string[]>([...props.filters.type]);
-const gemeenteSel = ref<string[]>([...props.filters.gemeente]);
-const provincieSel = ref<string[]>([...props.filters.provincie]);
-const authSel = ref<string[]>([...props.filters.authority]);
 const sortSel = ref(props.filters.sort);
 const layout = ref<'list' | 'grid'>('list');
 
-const facetGroups = computed(() => [
-    {
-        key: 'status',
-        title: 'Status',
-        options: props.facets.status,
-        model: statusSel,
-    },
-    {
-        key: 'gemeente',
-        title: 'Gemeente',
-        options: props.facets.gemeente,
-        model: gemeenteSel,
-    },
-    {
-        key: 'provincie',
-        title: 'Provincie',
-        options: props.facets.provincie,
-        model: provincieSel,
-    },
-    {
-        key: 'type',
-        title: 'Soort werk',
-        options: props.facets.type,
-        model: typeSel,
-    },
-    {
-        key: 'authority',
-        title: 'Uitvoerder',
-        options: props.facets.authority,
-        model: authSel,
-    },
-]);
+const groupOrder = ['status', 'gemeente', 'provincie', 'type', 'authority'];
+const facetGroups = computed(() =>
+    groupOrder.map((key) => props.facets[key]).filter(Boolean),
+);
 
 const hasActive = computed(
     () =>
         qInput.value.trim().length > 0 ||
-        facetGroups.value.some((group) => group.model.value.length > 0),
+        facetGroups.value.some((group) =>
+            group.options.some((option) => option.checked),
+        ),
 );
 
 const countWord = computed(() =>
     props.total === 1 ? 'werkzaamheid' : 'werkzaamheden',
 );
 
-type Param = string | string[] | number;
+/** Current pretty path; query refinements (q/sort/page) layer on top of it. */
+function currentPath(): string {
+    return window.location.pathname;
+}
 
-function params(extra: Record<string, Param> = {}): Record<string, Param> {
-    const payload: Record<string, Param> = { ...extra };
+function query(
+    extra: Record<string, string | number> = {},
+): Record<string, string | number> {
+    const payload: Record<string, string | number> = { ...extra };
     const q = qInput.value.trim();
     if (q) {
         payload.q = q;
-    }
-    if (statusSel.value.length) {
-        payload.status = statusSel.value;
-    }
-    if (typeSel.value.length) {
-        payload.type = typeSel.value;
-    }
-    if (gemeenteSel.value.length) {
-        payload.gemeente = gemeenteSel.value;
-    }
-    if (provincieSel.value.length) {
-        payload.provincie = provincieSel.value;
-    }
-    if (authSel.value.length) {
-        payload.authority = authSel.value;
     }
     if (sortSel.value !== 'start') {
         payload.sort = sortSel.value;
@@ -118,8 +54,13 @@ function params(extra: Record<string, Param> = {}): Record<string, Param> {
     return payload;
 }
 
-function applyFilters(): void {
-    router.get(index.url(), params(), {
+/** Navigate to an option's precomputed clean URL, keeping q/sort. */
+function go(url: string): void {
+    router.get(url, query(), { preserveScroll: true, reset: ['results'] });
+}
+
+function applyQuery(): void {
+    router.get(currentPath(), query(), {
         preserveState: true,
         preserveScroll: true,
         reset: ['results'],
@@ -127,49 +68,28 @@ function applyFilters(): void {
 }
 
 function loadMore(): void {
-    router.get(index.url(), params({ page: props.page + 1 }), {
+    router.get(currentPath(), query({ page: props.page + 1 }), {
         preserveState: true,
         preserveScroll: true,
         only: ['results', 'page', 'hasMore'],
     });
 }
 
-function toggle(model: typeof statusSel, key: string): void {
-    const i = model.value.indexOf(key);
-    if (i === -1) {
-        model.value.push(key);
-    } else {
-        model.value.splice(i, 1);
-    }
-    applyFilters();
-}
-
 function clearAll(): void {
     qInput.value = '';
-    statusSel.value = [];
-    typeSel.value = [];
-    gemeenteSel.value = [];
-    provincieSel.value = [];
-    authSel.value = [];
-    applyFilters();
+    router.get('/werkzaamheden', query(), {
+        preserveScroll: true,
+        reset: ['results'],
+    });
 }
 
 const chips = computed(() => {
-    const list: { label: string; remove: () => void }[] = [];
-    if (qInput.value.trim()) {
-        list.push({
-            label: `“${qInput.value.trim()}”`,
-            remove: () => {
-                qInput.value = '';
-                applyFilters();
-            },
-        });
-    }
+    const list: { label: string; url: string }[] = [];
     for (const group of facetGroups.value) {
-        for (const key of group.model.value) {
-            const label =
-                group.options.find((o) => o.key === key)?.label ?? key;
-            list.push({ label, remove: () => toggle(group.model, key) });
+        for (const option of group.options) {
+            if (option.checked) {
+                list.push({ label: option.label, url: option.url });
+            }
         }
     }
     return list;
@@ -202,7 +122,7 @@ const chips = computed(() => {
                 Filter op status, soort werk en uitvoerder om te vinden wat uw
                 straat raakt.
             </p>
-            <form class="flex flex-wrap gap-2.5" @submit.prevent="applyFilters">
+            <form class="flex flex-wrap gap-2.5" @submit.prevent="applyQuery">
                 <div
                     class="flex min-w-[280px] flex-1 gap-2.5 rounded-[11px] bg-white p-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.2)]"
                 >
@@ -270,9 +190,9 @@ const chips = computed(() => {
                     >
                         <input
                             type="checkbox"
-                            :checked="group.model.value.includes(option.key)"
+                            :checked="option.checked"
                             class="h-4 w-4 flex-shrink-0 cursor-pointer accent-primary"
-                            @change="toggle(group.model, option.key)"
+                            @change="go(option.url)"
                         >
                         <span
                             v-if="option.dot"
@@ -319,7 +239,7 @@ const chips = computed(() => {
                         <select
                             v-model="sortSel"
                             class="cursor-pointer bg-transparent text-[13.5px] font-bold text-primary outline-none"
-                            @change="applyFilters"
+                            @change="applyQuery"
                         >
                             <option value="start">Startdatum</option>
                             <option value="status">Status</option>
@@ -357,7 +277,7 @@ const chips = computed(() => {
                     :key="chip.label"
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-full border border-[#C9DBF6] bg-white py-1.5 pr-2.5 pl-3 text-[12.5px] font-semibold text-primary hover:bg-[#F0F5FD]"
-                    @click="chip.remove"
+                    @click="go(chip.url)"
                 >
                     {{ chip.label }}
                     <span class="text-[14px] leading-none text-[#7E94B8]"
