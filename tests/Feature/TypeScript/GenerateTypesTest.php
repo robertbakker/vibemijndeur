@@ -24,11 +24,18 @@ class GenerateTypesTest extends TestCase
 
         $contents = (string) file_get_contents($output);
 
-        // ProjectDetail is emitted directly under the App.Data namespace, and
-        // carries `slug` — proving the DTO is the source of truth (fixes the
-        // prior drift where the hand-written interface lacked it).
+        // ProjectDetail is emitted under the App.Data namespace, and carries
+        // `slug` — proving the DTO is the source of truth (fixes the prior drift
+        // where the hand-written interface lacked it).
         $this->assertMatchesRegularExpression(
-            '/namespace App \{\s*namespace Data \{\s*export type ProjectDetail = \{[^}]*\bslug\b:[^}]*\};/s',
+            '/namespace App \{\s*namespace Data \{.*?export type ProjectDetail = \{[^}]*\bslug\b:[^}]*\};/s',
+            $contents,
+        );
+
+        // The FacetOption DTO replaces the hand-written interface and carries the
+        // clean toggle `url` consumed by the Werkzaamheden sidebar.
+        $this->assertMatchesRegularExpression(
+            '/export type FacetOption = \{[^}]*\burl\b: string,[^}]*\};/s',
             $contents,
         );
 
