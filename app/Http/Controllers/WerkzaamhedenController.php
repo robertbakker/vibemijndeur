@@ -9,6 +9,10 @@ use App\Data\RoadworkStatus;
 use App\Models\Roadwork;
 use App\Roadworks\RoadworkSearch;
 use App\Router\ListingQuery;
+use App\StructuredData\BreadcrumbListNode;
+use App\StructuredData\CollectionPageNode;
+use App\StructuredData\ItemListNode;
+use App\StructuredData\StructuredData;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +40,10 @@ class WerkzaamhedenController extends Controller
         'authority' => 'road_authority',
     ];
 
-    public function __construct(private readonly RoadworkSearch $search) {}
+    public function __construct(
+        private readonly RoadworkSearch $search,
+        private readonly StructuredData $structuredData,
+    ) {}
 
     public function __invoke(Request $request): Response
     {
@@ -113,6 +120,17 @@ class WerkzaamhedenController extends Controller
 
         $total = (int) ($main['estimatedTotalHits'] ?? 0);
         $cards = $this->hydrate(array_column($main['hits'] ?? [], 'id'));
+
+        $this->structuredData->push(CollectionPageNode::make(
+            'Werkzaamheden in de buurt',
+            url()->current(),
+            ItemListNode::fromCards($cards),
+        ));
+
+        $this->structuredData->push(BreadcrumbListNode::make([
+            ['name' => 'Home', 'url' => url('/')],
+            ['name' => 'Werkzaamheden', 'url' => null],
+        ]));
 
         return Inertia::render('Werkzaamheden', [
             // Merge so "Meer laden" partial reloads append instead of replacing;
